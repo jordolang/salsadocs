@@ -1,60 +1,47 @@
 ---
 title: Deployment
-description: Production deployment and hosting guide
+description: Production deployment and hosting guide for José Madrid Salsa on Vercel
 ---
 
 # Deployment
 
-Guide for deploying José Madrid Salsa to production environments.
+Guide for deploying and operating José Madrid Salsa in production on **Vercel**.
 
-## Deployment Platforms
+## Vercel Platform
 
-### Vercel (Recommended)
-
-- [Vercel Deployment](/docs/deployment/vercel) - Deploy to Vercel platform
-- [Environment Variables](/docs/deployment/environment-variables) - Configure production env vars
-- [Database Setup](/docs/deployment/database-production) - Production database configuration
-
-### Self-Hosted
-
-- [Docker Deployment](/docs/deployment/docker) - Containerized deployment
-- [Server Setup](/docs/deployment/server-setup) - Manual server setup
-- [Nginx Configuration](/docs/deployment/nginx) - Reverse proxy setup
+- [Vercel Deployment](/docs/deployment/vercel) - Project linking, build pipeline, CI/CD
+- [Environment Variables](/docs/deployment/environment-variables) - Production env var management
+- [Database Setup](/docs/deployment/database-production) - Neon serverless Postgres configuration
+- [SSL/TLS & Domains](/docs/deployment/ssl) - Custom domains and HTTPS
 
 ## Pre-Deployment Checklist
 
-- [ ] Environment variables configured
-- [ ] Database migrations completed
-- [ ] Secrets securely stored
-- [ ] SSL certificates configured
-- [ ] CDN setup (if applicable)
-- [ ] Backup strategy in place
-- [ ] Monitoring configured
-- [ ] Performance optimized
+- [ ] Environment variables configured in Vercel
+- [ ] Database migrations tested locally
+- [ ] Secrets stored in Vercel (not in code)
+- [ ] Sentry DSN and auth token set
+- [ ] Analytics keys configured
+- [ ] Gitleaks pre-commit hook active
 
 ## Security
 
-- [Security Configuration](/docs/deployment/security) - Security best practices
-- [SSL/TLS Setup](/docs/deployment/ssl) - HTTPS configuration
-- [Firewall Rules](/docs/deployment/firewall) - Network security
-- [Secrets Management](/docs/deployment/secrets) - Safe secret handling
+- [Security Configuration](/docs/deployment/security) - Hardening, headers, RBAC
+- [Secrets Management](/docs/deployment/secrets) - Rotation, generation, isolation
 
 ## Performance
 
-- [Performance Optimization](/docs/deployment/performance) - Optimize for production
-- [Caching Strategy](/docs/deployment/caching) - Cache configuration
-- [Database Optimization](/docs/deployment/database-optimization) - Query optimization
-- [CDN Configuration](/docs/deployment/cdn) - Content delivery network
+- [Performance Optimization](/docs/deployment/performance) - Images, bundles, scripts
+- [Caching Strategy](/docs/deployment/caching) - Vercel CDN, ISR, revalidation
+- [Database Optimization](/docs/deployment/database-optimization) - Indexes, pooling, query tuning
 
 ## Monitoring & Logging
 
-- [Application Monitoring](/docs/deployment/monitoring) - Health checks and alerts
-- [Error Tracking](/docs/deployment/error-tracking) - Error monitoring with Sentry
-- [Log Management](/docs/deployment/logs) - Centralized logging
-- [Analytics](/docs/deployment/analytics) - User behavior tracking
+- [Application Monitoring](/docs/deployment/monitoring) - Sentry, Vercel Analytics, Amplitude
+- [Error Tracking](/docs/deployment/error-tracking) - Sentry integration details
+- [Analytics](/docs/deployment/analytics) - GA4, GTM, Amplitude, Vercel Analytics
+- [Log Management](/docs/deployment/logs) - Production logging and debugging
 
 ## Maintenance
 
-- [Database Backups](/docs/deployment/backups) - Backup and restore procedures
-- [Updates & Patches](/docs/deployment/updates) - Keep system updated
-- [Troubleshooting](/docs/deployment/troubleshooting) - Production troubleshooting
+- [Updates & Rollbacks](/docs/deployment/updates) - Dependency updates, deployment rollback
+- [Troubleshooting](/docs/deployment/troubleshooting) - Common issues and fixes
