@@ -10,15 +10,15 @@
    ═══════════════════════════════════════════ */
 
 @theme {
-  --color-fd-background: hsl(30, 20%, 97%);
-  --color-fd-foreground: hsl(15, 25%, 8%);
-  --color-fd-muted: hsl(25, 15%, 93%);
-  --color-fd-muted-foreground: hsl(20, 8%, 48%);
-  --color-fd-popover: hsl(30, 25%, 99%);
-  --color-fd-popover-foreground: hsl(15, 20%, 12%);
-  --color-fd-card: hsl(30, 20%, 98%);
-  --color-fd-card-foreground: hsl(15, 25%, 8%);
-  --color-fd-border: hsl(20, 12%, 88%);
+  --color-fd-background: hsl(30, 15%, 97%);
+  --color-fd-foreground: hsl(0, 0%, 5%);
+  --color-fd-muted: hsl(25, 12%, 92%);
+  --color-fd-muted-foreground: hsl(0, 0%, 28%);
+  --color-fd-popover: hsl(30, 20%, 99%);
+  --color-fd-popover-foreground: hsl(0, 0%, 5%);
+  --color-fd-card: hsl(30, 15%, 98%);
+  --color-fd-card-foreground: hsl(0, 0%, 5%);
+  --color-fd-border: hsl(20, 10%, 82%);
   --color-fd-primary: hsl(0, 75%, 50%);
   --color-fd-primary-foreground: hsl(0, 0%, 100%);
   --color-fd-secondary: hsl(25, 15%, 93%);
@@ -34,13 +34,13 @@
 
 .dark {
   --color-fd-background: hsl(15, 18%, 6%);
-  --color-fd-foreground: hsl(30, 15%, 92%);
+  --color-fd-foreground: hsl(0, 0%, 95%);
   --color-fd-muted: hsl(15, 12%, 12%);
-  --color-fd-muted-foreground: hsl(20, 8%, 58%);
+  --color-fd-muted-foreground: hsl(0, 0%, 68%);
   --color-fd-popover: hsl(15, 15%, 9%);
-  --color-fd-popover-foreground: hsl(30, 12%, 88%);
+  --color-fd-popover-foreground: hsl(0, 0%, 93%);
   --color-fd-card: hsl(15, 14%, 9%);
-  --color-fd-card-foreground: hsl(30, 15%, 92%);
+  --color-fd-card-foreground: hsl(0, 0%, 95%);
   --color-fd-border: hsl(15, 10%, 18%);
   --color-fd-primary: hsl(0, 72%, 58%);
   --color-fd-primary-foreground: hsl(0, 0%, 100%);
@@ -49,6 +49,66 @@
   --color-fd-accent: hsl(0, 50%, 18%);
   --color-fd-accent-foreground: hsl(0, 85%, 72%);
   --color-fd-ring: hsl(0, 72%, 58%);
+}
+
+/* ─── GLOBAL TEXT READABILITY ─── */
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* All body text — heavier weight, darker, more line height */
+body {
+  font-weight: 450;
+  color: hsl(0 0% 5%);
+  line-height: 1.7;
+}
+
+.dark body {
+  color: hsl(0 0% 95%);
+}
+
+/* All paragraph text */
+p, li, td, dd, figcaption, label, span {
+  color: hsl(0 0% 10%);
+  font-weight: 430;
+}
+
+.dark p, .dark li, .dark td, .dark dd, .dark figcaption, .dark label, .dark span {
+  color: hsl(0 0% 90%);
+}
+
+/* Headings — extra bold, near-black */
+h1, h2, h3, h4, h5, h6 {
+  color: hsl(0 0% 2%) !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em;
+}
+
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+  color: hsl(0 0% 97%) !important;
+}
+
+/* Nav links and sidebar text — readable weight */
+nav, nav a, nav span, nav button {
+  font-weight: 480;
+  color: hsl(0 0% 12%);
+}
+
+.dark nav, .dark nav a, .dark nav span, .dark nav button {
+  color: hsl(0 0% 88%);
+}
+
+/* Descriptions and secondary text — not too faded */
+[data-fd-description], .text-muted-foreground, .text-fd-muted-foreground {
+  color: hsl(0 0% 30%) !important;
+  font-weight: 430;
+}
+
+.dark [data-fd-description], .dark .text-muted-foreground, .dark .text-fd-muted-foreground {
+  color: hsl(0 0% 65%) !important;
 }
 
 /* ─── LAYOUT BACKGROUND ─── */
@@ -138,14 +198,14 @@ body::before {
   color: hsl(0 65% 65%) !important;
 }
 
-/* All sidebar links — slightly more contrast */
+/* All sidebar links — strong contrast */
 [data-fd-sidebar] a {
-  color: hsl(15 15% 25%);
-  font-weight: 450;
+  color: hsl(0 0% 12%) !important;
+  font-weight: 480;
 }
 
 .dark [data-fd-sidebar] a {
-  color: hsl(25 10% 72%);
+  color: hsl(0 0% 82%) !important;
 }
 
 /* ─── CODE BLOCKS ─── */
