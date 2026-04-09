@@ -3,3 +3,160 @@
 @import "fumadocs-ui/css/preset.css";
 
 @source '../node_modules/fumadocs-ui/dist/**/*.js';
+
+/*
+ * Jose Madrid Salsa Docs — Custom Theme
+ *
+ * Matches the main josemadridsalsa.com color palette:
+ * - Salsa red (#e53e3e) as primary accent
+ * - Chile amber (#f59e0b) as secondary accent
+ * - Verde green (#22c55e) for success states
+ * - Warm neutrals for backgrounds
+ */
+
+:root {
+  /* Override fumadocs CSS variables to match Jose Madrid branding */
+  --fd-primary: 0 75% 57%;          /* salsa-500 #e53e3e */
+  --fd-primary-foreground: 0 0% 100%;
+  --fd-muted: 20 6% 95%;
+  --fd-muted-foreground: 25 5% 45%;
+  --fd-accent: 0 75% 57%;
+  --fd-accent-foreground: 0 0% 100%;
+  --fd-background: 30 25% 98%;      /* warm off-white */
+  --fd-foreground: 20 14% 4%;
+  --fd-card: 0 0% 100%;
+  --fd-card-foreground: 20 14% 4%;
+  --fd-border: 20 6% 90%;
+  --fd-ring: 0 75% 57%;
+  --fd-popover: 0 0% 100%;
+  --fd-popover-foreground: 20 14% 4%;
+  --fd-secondary: 38 92% 50%;       /* chile-500 #f59e0b */
+  --fd-secondary-foreground: 0 0% 100%;
+}
+
+.dark {
+  --fd-primary: 0 75% 60%;          /* slightly brighter for dark mode */
+  --fd-primary-foreground: 0 0% 100%;
+  --fd-muted: 12 7% 15%;
+  --fd-muted-foreground: 24 5% 64%;
+  --fd-accent: 0 72% 50%;
+  --fd-accent-foreground: 0 0% 100%;
+  --fd-background: 20 14% 4%;
+  --fd-foreground: 60 9% 98%;
+  --fd-card: 20 10% 8%;
+  --fd-card-foreground: 60 9% 98%;
+  --fd-border: 12 7% 18%;
+  --fd-ring: 0 75% 60%;
+  --fd-popover: 20 10% 8%;
+  --fd-popover-foreground: 60 9% 98%;
+  --fd-secondary: 38 92% 50%;
+  --fd-secondary-foreground: 0 0% 100%;
+}
+
+/* Branded scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--fd-muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(0 75% 57% / 0.4);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(0 75% 57% / 0.6);
+}
+
+/* Branded link colors */
+.fd-prose a {
+  color: hsl(0 75% 50%);
+  text-decoration-color: hsl(0 75% 57% / 0.3);
+  transition: color 0.2s, text-decoration-color 0.2s;
+}
+
+.fd-prose a:hover {
+  color: hsl(0 75% 40%);
+  text-decoration-color: hsl(0 75% 57%);
+}
+
+.dark .fd-prose a {
+  color: hsl(0 75% 65%);
+}
+
+.dark .fd-prose a:hover {
+  color: hsl(0 80% 75%);
+}
+
+/* Branded code blocks */
+.fd-prose code:not(pre code) {
+  background: hsl(0 75% 57% / 0.08);
+  color: hsl(0 65% 45%);
+  border: 1px solid hsl(0 75% 57% / 0.15);
+  border-radius: 4px;
+  padding: 0.15em 0.35em;
+  font-size: 0.875em;
+}
+
+.dark .fd-prose code:not(pre code) {
+  background: hsl(0 75% 57% / 0.15);
+  color: hsl(0 70% 70%);
+  border-color: hsl(0 75% 57% / 0.25);
+}
+
+/* Sidebar active item styling */
+[data-active="true"] {
+  color: hsl(0 75% 50%) !important;
+  font-weight: 600;
+}
+
+.dark [data-active="true"] {
+  color: hsl(0 75% 65%) !important;
+}
+
+/* Branded callouts / admonitions */
+.fd-callout[data-type="info"] {
+  border-color: hsl(0 75% 57% / 0.4);
+  background: hsl(0 75% 57% / 0.05);
+}
+
+.fd-callout[data-type="warn"] {
+  border-color: hsl(38 92% 50% / 0.5);
+  background: hsl(38 92% 50% / 0.05);
+}
+
+.fd-callout[data-type="error"] {
+  border-color: hsl(0 84% 60% / 0.5);
+  background: hsl(0 84% 60% / 0.05);
+}
+
+/* Smooth page transitions */
+.fd-page-body {
+  animation: fadeSlideIn 0.3s ease-out;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* TOC active styling */
+.fd-toc a[data-active="true"] {
+  color: hsl(0 75% 50%);
+  border-left-color: hsl(0 75% 57%);
+}
+
+/* Search dialog accent */
+[data-dialog] input:focus {
+  border-color: hsl(0 75% 57%);
+  box-shadow: 0 0 0 2px hsl(0 75% 57% / 0.2);
+}

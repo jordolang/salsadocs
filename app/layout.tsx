@@ -1,15 +1,24 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Montserrat, Volkhov, Roboto_Mono } from 'next/font/google';
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const montserrat = Montserrat({
   subsets: ['latin'],
+  variable: '--font-montserrat',
+  display: 'swap',
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const volkhov = Volkhov({
+  weight: ['400', '700'],
   subsets: ['latin'],
+  variable: '--font-volkhov',
+  display: 'swap',
+});
+
+const robotoMono = Roboto_Mono({
+  subsets: ['latin'],
+  variable: '--font-roboto-mono',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -17,7 +26,22 @@ export const metadata: Metadata = {
     template: '%s | Jose Madrid Salsa Docs',
     default: 'Jose Madrid Salsa Documentation',
   },
-  description: 'Technical documentation for Jose Madrid Salsa — features, API reference, deployment guides, and more.',
+  description:
+    'Technical documentation for Jose Madrid Salsa — features, API reference, deployment guides, and developer resources.',
+  openGraph: {
+    title: 'Jose Madrid Salsa Documentation',
+    description: 'Technical documentation, API reference, and developer guides.',
+    type: 'website',
+    siteName: 'Jose Madrid Salsa Docs',
+    images: [
+      {
+        url: 'https://www.josemadrid.net/images/Opengraph/josemadrid-hero.png',
+        width: 1200,
+        height: 630,
+        alt: 'Jose Madrid Salsa',
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -28,10 +52,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${montserrat.variable} ${volkhov.variable} ${robotoMono.variable} antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body
+        className="min-h-screen"
+        style={{ fontFamily: 'var(--font-montserrat), Montserrat, system-ui, sans-serif' }}
+      >
+        {children}
+      </body>
     </html>
   );
 }
