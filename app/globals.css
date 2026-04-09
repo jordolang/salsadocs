@@ -160,3 +160,72 @@
   border-color: hsl(0 75% 57%);
   box-shadow: 0 0 0 2px hsl(0 75% 57% / 0.2);
 }
+
+/* Gradient text animation */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Subtle radial background for docs pages */
+.fd-layout {
+  background:
+    radial-gradient(ellipse at 0% 0%, hsl(0 75% 57% / 0.02) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 100%, hsl(38 92% 50% / 0.015) 0%, transparent 50%);
+}
+
+.dark .fd-layout {
+  background:
+    radial-gradient(ellipse at 0% 0%, hsl(0 75% 57% / 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 100%, hsl(38 92% 50% / 0.03) 0%, transparent 50%);
+}
+
+/* Enhanced sidebar styling */
+.fd-sidebar {
+  border-right-color: hsl(0 75% 57% / 0.08) !important;
+}
+
+.dark .fd-sidebar {
+  border-right-color: hsl(0 75% 57% / 0.12) !important;
+}
+
+/* Heading anchors */
+.fd-prose h2,
+.fd-prose h3,
+.fd-prose h4 {
+  scroll-margin-top: 5rem;
+}
+
+.fd-prose h2 {
+  border-bottom: 1px solid hsl(0 75% 57% / 0.1);
+  padding-bottom: 0.5rem;
+}
+
+/* Table styling */
+.fd-prose table {
+  border: 1px solid hsl(var(--fd-border));
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.fd-prose th {
+  background: hsl(0 75% 57% / 0.05);
+  font-weight: 600;
+}
+
+.dark .fd-prose th {
+  background: hsl(0 75% 57% / 0.1);
+}
+
+/* Blockquote styling */
+.fd-prose blockquote {
+  border-left-color: hsl(0 75% 57% / 0.4);
+  background: hsl(0 75% 57% / 0.03);
+  border-radius: 0 0.5rem 0.5rem 0;
+  padding: 1rem 1.25rem;
+}
+
+.dark .fd-prose blockquote {
+  background: hsl(0 75% 57% / 0.06);
+}

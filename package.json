@@ -9,10 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "framer-motion": "^12.38.0",
     "fumadocs-core": "^16.7.11",
     "fumadocs-mdx": "^14.2.11",
     "fumadocs-openapi": "^10.6.7",
     "fumadocs-ui": "^16.7.11",
+    "lucide-react": "^1.7.0",
     "next": "16.2.3",
     "react": "19.2.4",
     "react-dom": "19.2.4"
@@ -21,11 +23,11 @@
     "esbuild": "0.24.2"
   },
   "devDependencies": {
-    "esbuild": "0.24.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "0.24.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
     "tailwindcss": "^4",
