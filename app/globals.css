@@ -112,10 +112,40 @@ body::before {
   background: hsl(0 70% 50% / 0.12) !important;
 }
 
-/* Sidebar folder icons */
+/* Sidebar folder headers — bold, high contrast, prominent */
 [data-fd-sidebar] summary {
-  font-weight: 600;
-  letter-spacing: 0.01em;
+  font-weight: 800;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+  color: hsl(15 25% 12%) !important;
+  text-transform: uppercase;
+}
+
+.dark [data-fd-sidebar] summary {
+  color: hsl(30 15% 88%) !important;
+}
+
+/* Sidebar section labels / category headings */
+[data-fd-sidebar] [data-fd-separator] {
+  font-weight: 800 !important;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.06em !important;
+  color: hsl(0 60% 40%) !important;
+  text-transform: uppercase;
+}
+
+.dark [data-fd-sidebar] [data-fd-separator] {
+  color: hsl(0 65% 65%) !important;
+}
+
+/* All sidebar links — slightly more contrast */
+[data-fd-sidebar] a {
+  color: hsl(15 15% 25%);
+  font-weight: 450;
+}
+
+.dark [data-fd-sidebar] a {
+  color: hsl(25 10% 72%);
 }
 
 /* ─── CODE BLOCKS ─── */
