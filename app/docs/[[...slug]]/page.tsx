@@ -5,8 +5,14 @@ import {
   DocsTitle,
   DocsDescription,
 } from 'fumadocs-ui/page';
+import {
+  MarkdownCopyButton,
+  ViewOptionsPopover,
+} from 'fumadocs-ui/layouts/docs/page';
 import { notFound } from 'next/navigation';
 import { getMdxComponents } from '@/lib/mdx-components';
+import { getLastModified } from '@/lib/last-modified';
+import { Rate } from '@/components/rate';
 
 interface PageProps {
   params: Promise<{ slug?: string[] }>;
@@ -19,15 +25,29 @@ export default async function Page(props: PageProps) {
 
   const MDX = page.data.body;
 
+  const slugPath = (params.slug ?? []).join('/');
+  const githubPath = `content/docs/${slugPath}.mdx`;
+  const githubUrl = `https://github.com/jordolang/salsadocs/blob/main/${githubPath}`;
+  const markdownUrl = `/llms.mdx/${slugPath}`;
+
+  const lastModified = getLastModified(page.data.info.fullPath);
+
   return (
     <DocsPage
       toc={page.data.toc}
       full={page.data.full}
+      lastUpdate={lastModified ?? undefined}
+      tableOfContent={{
+        style: 'clerk',
+      }}
+      tableOfContentPopover={{
+        style: 'clerk',
+      }}
       editOnGithub={{
         repo: 'salsadocs',
         owner: 'jordolang',
         sha: 'main',
-        path: `content/docs/${(params.slug ?? []).join('/')}.mdx`,
+        path: githubPath,
       }}
       footer={{
         enabled: true,
@@ -39,8 +59,13 @@ export default async function Page(props: PageProps) {
     >
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
+      <div className="flex flex-row items-center gap-2 border-b border-fd-border pb-4">
+        <MarkdownCopyButton markdownUrl={markdownUrl} />
+        <ViewOptionsPopover markdownUrl={markdownUrl} githubUrl={githubUrl} />
+      </div>
       <DocsBody>
         <MDX components={getMdxComponents()} />
+        <Rate />
       </DocsBody>
     </DocsPage>
   );

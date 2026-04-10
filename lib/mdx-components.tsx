@@ -8,6 +8,7 @@ import { Accordion, Accordions } from 'fumadocs-ui/components/accordion';
 import { ImageZoom } from 'fumadocs-ui/components/image-zoom';
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 import { Card, Cards } from 'fumadocs-ui/components/card';
+import { Mermaid } from '@/components/mermaid';
 
 export function getMdxComponents(): MDXComponents {
   return {
@@ -33,5 +34,6 @@ export function getMdxComponents(): MDXComponents {
     TypeTable,
     Card,
     Cards,
+    Mermaid,
   };
 }
