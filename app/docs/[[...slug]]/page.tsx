@@ -13,6 +13,7 @@ import { notFound } from 'next/navigation';
 import { getMdxComponents } from '@/lib/mdx-components';
 import { getLastModified } from '@/lib/last-modified';
 import { Rate } from '@/components/rate';
+import { TocProvider } from '@/components/toc-context';
 
 interface PageProps {
   params: Promise<{ slug?: string[] }>;
@@ -64,7 +65,9 @@ export default async function Page(props: PageProps) {
         <ViewOptionsPopover markdownUrl={markdownUrl} githubUrl={githubUrl} />
       </div>
       <DocsBody>
-        <MDX components={getMdxComponents()} />
+        <TocProvider items={page.data.toc}>
+          <MDX components={getMdxComponents()} />
+        </TocProvider>
         <Rate />
       </DocsBody>
     </DocsPage>

@@ -9,6 +9,11 @@ import { ImageZoom } from 'fumadocs-ui/components/image-zoom';
 import { TypeTable } from 'fumadocs-ui/components/type-table';
 import { Card, Cards } from 'fumadocs-ui/components/card';
 import { Mermaid } from '@/components/mermaid';
+import { GithubInfo } from '@/components/github-info';
+import { SafeGithubInfo } from '@/components/safe-github-info';
+import { SiteGraph } from '@/components/site-graph';
+import { PageInlineTOC } from '@/components/page-inline-toc';
+import { InlineTOC } from '@/components/inline-toc';
 
 export function getMdxComponents(): MDXComponents {
   return {
@@ -35,5 +40,11 @@ export function getMdxComponents(): MDXComponents {
     Card,
     Cards,
     Mermaid,
+    // Custom fumadocs components
+    GithubInfo: SafeGithubInfo,
+    GithubInfoRaw: GithubInfo,
+    SiteGraph,
+    InlineTOC,
+    PageInlineTOC,
   };
 }
