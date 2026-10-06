@@ -1,0 +1,109 @@
+---
+title: BigCommerce Test Order and Refund
+description: Place one real low-value order through the new site's BigCommerce checkout, confirm it everywhere it should appear, and refund it
+---
+
+# Place a BigCommerce Test Order and Refund It
+
+**Why:** retail checkout on the new site hands the cart to BigCommerce's own checkout. A real
+order (not a test-mode one) is the only way to prove the whole chain works: the cart arrives
+intact, the card is charged, BigCommerce emails the customer, the order is copied into the
+website's admin, and a refund goes back to the card.
+
+**Time:** 15 minutes, plus a few days for the refund to show on the card statement.
+
+**Cost:** one jar plus shipping, refunded in full. Card processing fees on the original charge
+are usually not returned by the payment processor.
+
+**You need:** a personal credit card, the BigCommerce owner login, and a website admin login.
+
+<Callout type="info" title="State on 6 October 2026">
+The BigCommerce checkout switch (`NEXT_PUBLIC_COMMERCE_BACKEND`) is set in Vercel production, so
+retail carts on the live site already go to BigCommerce. Run this test now, and again on launch
+day after the domain changes.
+</Callout>
+
+<Steps>
+<Step>
+### Check the price
+
+Open any salsa page on the live site (for example from **Shop → Salsas**). The jar price should
+match BigCommerce's, **$8** as of September 2026.
+</Step>
+
+<Step>
+### Fill a cart
+
+1. Add **one jar** of any salsa.
+2. Also add a **Choose 6** pack and pick six jars, if you want to test pack orders too. (It makes
+   the test more expensive; one jar alone is enough for a basic check.)
+3. Open the cart and click **Checkout**.
+</Step>
+
+<Step>
+### Check out on BigCommerce
+
+1. You should land on BigCommerce's checkout (the "Jose Madrid / Salsa · Est. 1987" header with a
+   **Secure checkout** badge). The address bar should show `shop.josemadridsalsa.com`.
+   `josemadridsalsa.com` itself now points at the new site, so a checkout that tries to open
+   there won't load; see the table at the bottom.
+2. Check the items match the cart. For a pack, the six jars are filled in as **Jar 1** to **Jar 6**.
+3. Enter your own name, email and shipping address, pick the cheapest shipping, and pay with your
+   card.
+4. Note the **order number** on the confirmation page.
+</Step>
+
+<Step>
+### Confirm the order arrived everywhere
+
+- [ ] **Your inbox:** BigCommerce's order confirmation email arrives.
+- [ ] **BigCommerce → Orders → View:** the order is there, status *Awaiting Fulfillment*.
+- [ ] **Website admin → Orders:** within a minute, a copy appears numbered `BC-<order number>`,
+      marked read-only.
+- [ ] **Payment provider** (the one BigCommerce charges through): the charge shows.
+</Step>
+
+<Step>
+### Refund it in BigCommerce
+
+1. **BigCommerce → Orders → View**, find the order.
+2. Open the order's **Actions** menu (the **⋯** at the end of its row) → **Refund**.
+3. Refund **all items and shipping**, to the original payment method. Click **Refund**.
+4. If you won't ship it, also change the order status to **Refunded** (BigCommerce usually does
+   this for a full refund) so nobody packs it.
+
+Do refunds **in BigCommerce**, not in the payment provider's dashboard and not in the website
+admin. The website refuses changes to a `BC-` copy and updates it on its own.
+</Step>
+
+<Step>
+### Confirm the refund
+
+- [ ] BigCommerce shows the order as **Refunded**.
+- [ ] You get BigCommerce's refund email.
+- [ ] Within a minute or two the `BC-` copy in the website admin also shows as refunded. If it
+      hasn't changed after an hour, the hourly order sync will catch it; if it still hasn't,
+      tell a developer the BigCommerce webhooks need re-registering.
+- [ ] In a few business days the refund shows on your card statement.
+</Step>
+</Steps>
+
+## Also check the fundraiser path
+
+Fundraiser sales must **not** go to BigCommerce. Open any fundraiser's referral link, add a
+jar, and click checkout. You should stay on the website's own checkout (not BigCommerce's). You
+don't need to complete that purchase.
+
+## If something fails
+
+| What happened | What it means | Who fixes it |
+|---|---|---|
+| Checkout page won't load, or opens on `josemadridsalsa.com` instead of `shop.` | BigCommerce's checkout address hasn't been moved to the `shop.` subdomain | BigCommerce support ([launch step 1](/docs/owner-runbook/launch-josemadridsalsa-com)) |
+| Checkout shows different items, or is empty | The cart hand-off failed | Developer (check Vercel logs for `/api/checkout/bigcommerce`) |
+| A product page says Out of Stock | Its name doesn't match BigCommerce exactly, or it's hidden in BigCommerce | You, in BigCommerce → Products |
+| Payment declined or errors on BigCommerce's page | BigCommerce's payment setup | BigCommerce support |
+| No `BC-` copy in the website admin after an hour | Webhooks not registered or switched off | Developer: re-run `npm run bigcommerce:webhooks` |
+
+**To switch BigCommerce checkout off entirely**, remove `NEXT_PUBLIC_COMMERCE_BACKEND` in Vercel
+(josemadridsalsa → Settings → Environment Variables) and redeploy. Carts then use the site's own
+checkout again.

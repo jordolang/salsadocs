@@ -1,0 +1,121 @@
+---
+title: Move the Fundraising Site
+description: Give fundraising.josemadrid.net its own Vercel project so fundraiser pages load again
+---
+
+# Move the Fundraising Site to Its Own Vercel Project
+
+**Why:** the fundraising site and every fundraiser page (`/fundraising`, `/fundraisers/...`,
+`/f/...`, the fundraiser portal, the arena) became their own app on 6 October 2026
+(josemadridsalsa PR #563). The main site no longer serves those pages. Until
+`fundraising.josemadrid.net` is attached to a Vercel project that runs the new app, that
+address shows the main site's home page instead of the fundraising site.
+
+**Time:** about 30 minutes, most of it re-entering settings.
+
+**You need:** Vercel owner access, and the original values for any setting marked
+*Sensitive* in Vercel (see step 2).
+
+<Callout type="info" title="State on 6 October 2026">
+Vercel has one project for this repository, `josemadridsalsa`, and `fundraising.josemadrid.net`
+is attached to it. There is also an older project named `josemadrid-fundraising` from June 2026.
+Don't reuse it unless its **Root Directory** is `apps/fundraising`; creating a fresh project is
+simpler.
+</Callout>
+
+<Steps>
+<Step>
+### Create the project
+
+1. Vercel → **Add New → Project**.
+2. Import `jordolang/josemadridsalsa` (the same repository as the main site).
+3. Name it `josemadridsalsa-fundraising`.
+4. Set **Root Directory** to `apps/fundraising`. Leave **Include files outside the root
+   directory** switched on.
+5. Leave the framework, build command and install command as Vercel fills them in; they come
+   from `apps/fundraising/vercel.json`.
+6. Don't deploy yet if Vercel offers to. If it deploys anyway, that's fine; it will fail or
+   be incomplete until step 2 is done, and nobody sees it.
+</Step>
+
+<Step>
+### Copy the settings
+
+The two sites share the database, sign-in, payment, email and upload settings.
+
+1. Open the main project: **josemadridsalsa → Settings → Environment Variables**, filtered to
+   **Production**.
+2. In the new project, **Settings → Environment Variables**, add the same names with the same
+   values for **Production**.
+   - Values marked **Sensitive** can't be revealed or copied out of Vercel. Paste them again
+     from where they came from (BigCommerce API account, Square, the shipping provider, and so on).
+   - The `POSTGRES_*` values come from a database integration. Under **Storage** (or
+     **Integrations**) in the new project, connect the **same** database rather than typing them.
+   - If a developer has the Vercel CLI set up, `vercel env pull` on the main project and
+     **Import .env** on the new one saves typing for the non-sensitive values.
+3. In the **fundraising** project, set these three. Don't copy them from the main project;
+   they say which address each site lives at:
+
+| Setting | Value in the fundraising project |
+|---|---|
+| `NEXT_PUBLIC_SITE_URL` | `https://www.josemadrid.net` (the main site; change it on launch day, see [Launch](/docs/owner-runbook/launch-josemadridsalsa-com)) |
+| `NEXT_PUBLIC_FUNDRAISING_SITE_URL` | `https://fundraising.josemadrid.net` |
+| `NEXTAUTH_URL` | `https://fundraising.josemadrid.net` |
+
+   The main project needs no change here; it already defaults to these addresses.
+
+4. **Deployments → Redeploy** the new project's latest deployment so it picks the settings up.
+</Step>
+
+<Step>
+### Add the sign-in callbacks
+
+Accounts are shared, but each site signs people in on its own address, so each sign-in provider
+needs the fundraising address added (keep the main site's entries):
+
+| Provider | Where | Add |
+|---|---|---|
+| Google | Google Cloud console → APIs & Services → Credentials → the OAuth client | `https://fundraising.josemadrid.net/api/auth/callback/google` |
+| Facebook | developers.facebook.com → the app → Facebook Login → Settings → Valid OAuth Redirect URIs | `https://fundraising.josemadrid.net/api/auth/callback/facebook` |
+| Apple | developer.apple.com → Services ID → Return URLs | `https://fundraising.josemadrid.net/api/auth/callback/apple` |
+
+Skip any provider the site doesn't use.
+</Step>
+
+<Step>
+### Move the domain
+
+1. **josemadridsalsa → Settings → Domains**: remove `fundraising.josemadrid.net`.
+2. **josemadridsalsa-fundraising → Settings → Domains**: add `fundraising.josemadrid.net`.
+
+No DNS change is needed; josemadrid.net's DNS is already on Vercel. The site is unavailable for
+the minute between removing and adding.
+
+Leave `fundraising.josemadridsalsa.com` on the main project for now. It moves later, when the
+fundraising site changes address.
+</Step>
+
+<Step>
+### Check it
+
+- [ ] `https://fundraising.josemadrid.net` shows the fundraising site, not the salsa store home page.
+- [ ] `https://www.josemadrid.net/fundraising` lands on `https://fundraising.josemadrid.net/fundraising`.
+- [ ] A fundraiser's page opens.
+- [ ] The fundraiser portal sign-in works.
+- [ ] Open a fundraiser referral link, add a jar and go to checkout: checkout stays on the
+      fundraising site.
+- [ ] In the portal, uploading a group logo works.
+</Step>
+</Steps>
+
+## If it goes wrong
+
+Move `fundraising.josemadrid.net` back to the `josemadridsalsa` project. That restores the
+current state (main site's home page on that address); a developer then has to revert PR #563 to
+bring the old fundraiser pages back on the main project.
+
+## What stays on the main site
+
+Staff still manage fundraisers in the main admin, the fundraiser phone app still talks to the
+main site, and every webhook (Stripe, PayPal, Square, BigCommerce) still points at the main
+site. Nothing about those changes here.
