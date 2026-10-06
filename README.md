@@ -193,9 +193,10 @@ There are two copies of the developer documentation today, and they have drifted
 | Last synced | June 2026 | Current |
 | Covers BigCommerce, fundraising site, mobile app, kiosks, desktop apps | No | Yes |
 
-The monorepo's own deployment guide describes `apps/docs` as the successor to this repo.
-Choosing one home, and bringing the other in line, is the first step of the
-[documentation plan](docs/DOCUMENTATION_PLAN.md).
+**Going forward, pages are written in the monorepo's `apps/docs` and mirrored here** by a
+sync job, so a feature and the page describing it ship together. Building that sync is the
+first step of the [documentation plan](docs/DOCUMENTATION_PLAN.md). Until it runs, edit
+`apps/docs`, not `content/docs` in this repo.
 
 ## Running this docs site
 

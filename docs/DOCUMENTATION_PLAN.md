@@ -17,8 +17,8 @@ Surveyed against `jordolang/josemadridsalsa` at commit `12ec8fa` (6 October 2026
    answer, linked from everywhere else.
 3. **True to the code.** Every page names the files, routes, env vars and Vercel projects
    it describes, so it can be checked and kept current.
-4. **One home.** The two copies of the docs (this repo and the monorepo's `apps/docs`)
-   become one source of truth.
+4. **One home, one mirror.** Pages are written in the monorepo's `apps/docs`, next to the
+   code they describe, and a sync job mirrors them into this repo (decided 6 October 2026).
 
 ## 2. Audiences
 
@@ -166,9 +166,14 @@ Quick start, adding a feature, testing, code quality, debugging, versioning, API
 
 ## 6. Delivery phases
 
-1. **Pick the home and sync.** Decide whether `apps/docs` or this repo is the source of
-   truth, then bring the other in line (or retire it). Until then this repo is behind by
-   56 pages.
+1. **Build the sync.** Writing happens in `apps/docs`; this repo is a mirror. A GitHub
+   Actions workflow in the monorepo runs on every push to `main` that touches
+   `apps/docs/content/**`, copies `content/docs` into this repo with a token scoped to
+   it, and commits only when something changed. The first run closes the current gap
+   (56 missing pages, 42 stale ones) and removes the Shopify pages. The admin panel's
+   existing per-page publisher (`/admin/developer/salsadocs`, which writes straight to this
+   repo through `SALSADOCS_GITHUB_TOKEN`) would be overwritten by the next sync, so it
+   should write to `apps/docs` instead, or be retired.
 2. **Start here + Apps.** Platform overview, glossary, and the per-app pages with the
    shared template. These are the pages most readers will land on.
 3. **Architecture + Operations.** Data model map, commerce backends, release pages for
@@ -180,7 +185,8 @@ Quick start, adding a feature, testing, code quality, debugging, versioning, API
 
 ## 7. Open questions
 
-- Which copy is the source of truth going forward: this repo or `apps/docs`?
+- Should the sync mirror only page content, or also the site code (`app/`, `components/`),
+  so this site looks identical to `apps/docs`?
 - Is `fundraising.josemadridsalsa.com` still the planned long-term host?
 - How are the kiosk apps installed on the tablets today (sideload, MDM, TestFlight)?
 - Is the fundraiser app already live in both stores, or still in internal testing?
