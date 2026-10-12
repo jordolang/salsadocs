@@ -24,7 +24,7 @@ purchase land in one place:
 | Tracker | ID the website uses | Where to find it |
 |---|---|---|
 | Google Analytics 4 | The GA4 property behind the website's Google Tag Manager container `GTM-NTWG6BQW` | Website admin → **Analytics** → **Google Tag (Measurement ID)**, a `G-...` code |
-| Meta pixel | `2546527762445636` | Meta Events Manager → Data sources |
+| Meta pixel | `2546527762445636` (the main site also fires `1398300505576315` and `1730691091279285`, the last added in josemadridsalsa #571) | Meta Events Manager → Data sources |
 | TikTok pixel | `D8OEDO3C77U56UIVDE3G` | TikTok Ads Manager → Tools → Events |
 
 These IDs are public (they appear in every page's source), so it's fine that they're written here.
@@ -50,7 +50,8 @@ Then make Google treat both sites as one journey:
 1. **analytics.google.com → Admin → Data streams** → the website's web stream.
 2. **Configure tag settings → Configure your domains**.
 3. Add one condition per domain, match type **contains**:
-   `josemadrid.net`, `josemadridsalsa.com`, `shop.josemadridsalsa.com`.
+   `josemadridsalsa.com` (covers `www.`, `shop.` and `fundraising.`) and `josemadrid.net`
+   (old links).
 4. Save.
 </Step>
 
@@ -61,7 +62,9 @@ Then make Google treat both sites as one journey:
    **Facebook Pixel**), or **Channel Manager → Facebook by Meta** if the store uses Meta's
    channel app.
 2. Connect the Meta Business account and choose pixel `2546527762445636`. If asked for an ID,
-   paste it.
+   paste it. If your ads optimise on one of the other two pixels the website fires
+   (`1398300505576315` or `1730691091279285`), connect that one instead, or as well if
+   BigCommerce allows more than one.
 3. Turn on purchase events if there's a separate switch for them. Save.
 </Step>
 
