@@ -3,6 +3,7 @@
   "pages": [
     "index",
     "owner-runbook",
+    "apps",
     "api",
     "getting-started",
     "features",

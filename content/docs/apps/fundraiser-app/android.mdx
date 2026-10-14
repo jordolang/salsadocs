@@ -1,0 +1,106 @@
+---
+title: Running on Android
+description: Build and run the fundraiser app on an Android emulator or phone with expo run:android or Android Studio, and fix common build failures
+---
+
+# Running on Android
+
+As on iOS, the app runs only as a native build. Expo Go does not contain Square's SDK.
+
+## Prerequisites
+
+- **Android Studio** with **SDK Platform 36** installed (the app sets `compileSdkVersion` 36) and
+  its bundled JDK. Set `ANDROID_HOME` (usually `~/Library/Android/sdk` on macOS or
+  `%LOCALAPPDATA%\Android\Sdk` on Windows) and put `platform-tools` on your `PATH` so `adb` works.
+- **An emulator or phone on Android 9 (API 28) or newer**, which is the app's `minSdkVersion`.
+  For a phone, turn on Developer options and USB debugging, connect it, and check it appears in
+  `adb devices`.
+- **For Tap to Pay**, a real NFC phone on a recent Android that passes Google's security checks.
+  The emulator can't take a tap, and a rooted phone fails Square's checks.
+
+Android builds work on macOS, Windows and Linux.
+
+## With `npx expo run:android`
+
+```bash
+cd apps/fundraiser-app
+npm install
+npm run android                     # npx expo run:android
+npx expo run:android --device       # choose an emulator or a connected phone
+```
+
+The first run generates `android/` (gitignored), downloads Gradle and Square's SDK from
+`sdk.squareup.com`, builds a debug APK, installs it and starts Metro. Later runs are incremental.
+After changing `app.json`, a config plugin or a native package, regenerate:
+
+```bash
+npx expo prebuild --platform android --clean
+npx expo run:android
+```
+
+## With Android Studio
+
+1. `npx expo prebuild --platform android` to generate `android/`.
+2. Open the `android` folder in Android Studio and let Gradle sync.
+3. Start Metro in a terminal with `npx expo start`.
+4. Pick an emulator or device and press Run.
+
+Like Xcode changes, anything edited under `android/` is lost the next time it is regenerated.
+Make lasting changes in `app.json` or `plugins/with-square-mobile-payments.js`.
+
+## Reaching a local storefront
+
+- **Emulator.** The emulator reaches your computer at `10.0.2.2`, so set
+  `EXPO_PUBLIC_API_URL=http://10.0.2.2:3000`.
+- **Phone.** Use your computer's LAN address, e.g. `http://192.168.1.20:3000`, with the phone on
+  the same network. Alternatively, run `adb reverse tcp:3000 tcp:3000` and use
+  `http://localhost:3000`.
+
+Restart Metro with `--clear` after changing it. Debug builds allow plain `http://`; release builds
+do not, so a release build must point at an `https://` storefront.
+
+## Store builds
+
+```bash
+npx eas-cli@latest login            # the Jose Madrid Expo account
+npx eas-cli@latest init             # once: links the project and writes its id into app.json
+npm run build:android               # eas build --platform android --profile production
+npm run submit:android              # upload to Google Play
+```
+
+The Play Console needs an app created with package `net.josemadrid.fundraiser`, and the very first
+upload to Play must be done by hand in the Play Console; `submit:android` works after that. Build
+numbers (version codes) increment remotely; bump `version` in `app.json` for each release. The
+`preview` profile makes an internally distributed build for testers.
+
+## Troubleshooting
+
+<Accordions>
+<Accordion title="Could not resolve com.squareup.sdk dependencies">
+Gradle can't reach Square's Maven repository. Check that `android/build.gradle` contains
+`maven { url("https://sdk.squareup.com/public/android/") }` under `allprojects.repositories`.
+If it doesn't, the Square plugin did not run, or the project uses a Kotlin DSL `build.gradle.kts`
+the plugin skips (it only edits Groovy). Regenerate with `npx expo prebuild --platform android --clean`.
+</Accordion>
+<Accordion title="Kotlin: module was compiled with an incompatible version of Kotlin">
+Square's SDK is built with a newer Kotlin than React Native's Gradle plugin. The Square plugin
+adds `-Xskip-metadata-version-check` to every Kotlin compile task for this. If the flag is
+missing from `android/build.gradle`, regenerate the project.
+</Accordion>
+<Accordion title="More than one file was found with OS independent path META-INF/versions/9/OSGI-INF/MANIFEST.MF">
+The plugin adds that path to `android.packagingOptions.pickFirsts` in `android/gradle.properties`.
+Regenerate the project if it is missing.
+</Accordion>
+<Accordion title="Installation fails: requires newer sdk version">
+The device or emulator is older than Android 9 (API 28). Use a newer system image or phone.
+</Accordion>
+<Accordion title="Tap to Pay is not offered">
+The phone has no NFC, NFC is off, or it fails Google's device checks (a rooted phone does). Keyed entry and a Square Reader still work. Square's reader screen, from
+**Card reader & Tap to Pay** on the app's home screen, shows what the SDK sees.
+</Accordion>
+<Accordion title="The Card option is missing, or Square sign-in fails">
+Same causes as on iOS: card payments off for the group, or the app's Square application id and
+the storefront's Square connection in different environments. See
+[application id and environments](/docs/apps/fundraiser-app/square-sdk#application-id-and-environments).
+</Accordion>
+</Accordions>

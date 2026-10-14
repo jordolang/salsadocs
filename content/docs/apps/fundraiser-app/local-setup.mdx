@@ -1,0 +1,107 @@
+---
+title: Local Setup
+description: Install the fundraiser app, run a native development build, and point it at a local storefront
+---
+
+# Local Setup
+
+The fundraiser app is an Expo project, but it cannot run in Expo Go: it needs Square's native
+payments SDK, so every run is a native build of the app on a simulator, emulator or phone. The
+first build takes several minutes; after that, JavaScript changes reload instantly through Metro.
+
+## Prerequisites
+
+| For | You need |
+|---|---|
+| Everything | Node 20 or newer (the monorepo's `.nvmrc` says 20) and npm, plus a clone of `jordolang/josemadridsalsa` |
+| iOS | A Mac with Xcode and its command-line tools, CocoaPods, and an iOS Simulator or an iPhone. Use the Xcode version Expo SDK 57 asks for |
+| Android | Android Studio with SDK platform 36 (the app compiles against 36), a JDK (Android Studio's bundled one works), and an emulator or phone running Android 9 (API 28) or newer |
+| Card payments | A real phone. Tap to Pay needs an iPhone XS or newer, or an NFC Android phone; simulators and emulators cannot take a tap |
+| Talking to a local server | The storefront running on your computer (`npm run dev` at the monorepo root) and its database |
+
+Platform details, signing and troubleshooting are on [Running on iOS](/docs/apps/fundraiser-app/ios)
+and [Running on Android](/docs/apps/fundraiser-app/android).
+
+## Install
+
+The app is deliberately **outside** the monorepo's npm workspaces (`"!apps/fundraiser-app"` in the
+root `package.json`), so its React Native dependencies never reach the web builds. Install it in
+its own folder:
+
+```bash
+cd apps/fundraiser-app
+npm install
+```
+
+Add packages with `npx expo install <package>`, never `npm install <package>`: Expo picks the
+version that matches SDK 57. After changing dependencies, run `npx expo-doctor` (or
+`npm run doctor`) and fix anything it reports.
+
+## First run
+
+<Steps>
+<Step>
+**Build and launch.** From `apps/fundraiser-app`:
+
+```bash
+npm run ios       # same as: npx expo run:ios
+npm run android   # same as: npx expo run:android
+```
+
+Each command runs `expo prebuild` to generate the native project (`ios/` or `android/`, both
+gitignored), compiles it, installs it on a simulator, emulator or connected device, and starts
+Metro. Add `--device` to pick a device from a list.
+</Step>
+<Step>
+**Edit and reload.** Leave Metro running. Saving a file under `src/` reloads the app. Shake the
+device (or press <kbd>Cmd</kbd>+<kbd>D</kbd> in the iOS Simulator, <kbd>Cmd</kbd>/<kbd>Ctrl</kbd>+<kbd>M</kbd>
+in the Android emulator) for the developer menu.
+</Step>
+<Step>
+**Rebuild only when native things change.** Run the build command again after changing
+`app.json`, a config plugin, or a package with native code. Add `--clean` to the prebuild step
+(`npx expo prebuild --clean`) when an earlier generated project gets in the way. Otherwise,
+`npx expo start` and reopening the installed app is enough.
+</Step>
+</Steps>
+
+<Callout type="warn" title="Don't open it in Expo Go">
+`npx expo start` prints a QR code for Expo Go. Ignore it: Expo Go lacks the Square module, and
+the project is not set up to run there. Open the development build you installed instead.
+</Callout>
+
+## Signing in during development
+
+With no extra configuration a development build talks to **production**
+(`https://www.josemadridsalsa.com`), so the group ID and group PIN you type are real ones. To try
+the app without touching live groups, point it at your local storefront:
+
+1. Start the storefront from the monorepo root with `npm run dev`. It listens on port 3000.
+2. Find your computer's address on the local network (for example `192.168.1.20`). A phone
+   cannot reach `localhost` on your computer; the iOS Simulator can.
+3. Create `apps/fundraiser-app/.env.local` (gitignored) with:
+
+   ```bash
+   EXPO_PUBLIC_API_URL=http://192.168.1.20:3000
+   ```
+
+4. Restart Metro (`npx expo start --clear`), because `EXPO_PUBLIC_` values are inlined into the
+   JavaScript bundle when it is built.
+5. In the local admin (`http://localhost:3000/admin`), open a fundraiser campaign, click
+   **Mobile App**, set a group PIN and turn the app on. That gives you a group ID to join with.
+
+Card payments need more than this on the server; see
+[Configuration](/docs/apps/fundraiser-app/configuration#server-settings-the-app-depends-on) and
+[Square SDK](/docs/apps/fundraiser-app/square-sdk#sandbox-builds).
+
+## Checks before a pull request
+
+```bash
+npm run type-check   # tsc --noEmit
+npm run doctor       # expo-doctor
+```
+
+The app's two pure helpers are tested from the storefront (`npm run test` at the monorepo root
+covers `apps/storefront/tests/lib/fundraiser-app`). If you change anything under
+`apps/storefront/lib/fundraiser-app` or `packages/core/lib/fundraiser-app`, the monorepo's usual
+`test`, `lint`, `type-check` and `build` apply too.

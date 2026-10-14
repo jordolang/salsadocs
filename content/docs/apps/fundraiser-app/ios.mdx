@@ -1,0 +1,159 @@
+---
+title: Running on iOS
+description: Build and run the fundraiser app on the iOS Simulator or an iPhone with expo run:ios or Xcode, sign it, and fix common build failures
+---
+
+# Running on iOS
+
+There are two ways to run the app on iOS. Both start from the same generated Xcode project, so
+pick whichever suits the job. Expo Go is not one of them: it does not contain Square's SDK.
+
+| | `npx expo run:ios` | `npx expo prebuild` + Xcode |
+|---|---|---|
+| Best for | Day-to-day work in the JavaScript | Signing, entitlements, native debugging, reading build logs |
+| What it does | Generates `ios/`, installs pods, builds, installs and launches, starts Metro | Generates `ios/` and installs pods; you build and run from Xcode |
+| Needs | A Mac with Xcode, CocoaPods | The same |
+
+## With `npx expo run:ios`
+
+```bash
+cd apps/fundraiser-app
+npm install
+npm run ios                    # npx expo run:ios, on the default simulator
+npx expo run:ios --device      # choose a simulator or a connected iPhone
+```
+
+The first run generates `ios/`, runs `pod install` (which downloads Square's framework) and
+compiles everything, so it takes a while. Later runs only rebuild what changed. Metro stays
+running; JavaScript edits reload without a rebuild.
+
+Run it again after any change to `app.json`, a config plugin or a native package. If the
+generated project is out of step with the config, start clean:
+
+```bash
+npx expo prebuild --platform ios --clean
+npx expo run:ios
+```
+
+## With `npx expo prebuild` and Xcode
+
+<Steps>
+<Step>
+**Generate the project.**
+
+```bash
+cd apps/fundraiser-app
+npm install
+npx expo prebuild --platform ios
+```
+
+This writes `ios/` (gitignored) and installs the pods. Add `--clean` to regenerate it from
+scratch.
+</Step>
+<Step>
+**Open the workspace**, not the project file:
+
+```bash
+xed ios    # or: open ios/*.xcworkspace
+```
+</Step>
+<Step>
+**Set up signing** (devices only). Select the app target, open **Signing & Capabilities**,
+choose the Jose Madrid Apple Developer team and leave automatic signing on. If the team has not
+been granted the Tap to Pay entitlement yet, see [signing with Tap to Pay](#signing-and-tap-to-pay).
+</Step>
+<Step>
+**Start Metro** in a terminal: `npx expo start`. A Debug build loads its JavaScript from Metro.
+</Step>
+<Step>
+**Run.** Pick a simulator or your iPhone in Xcode's toolbar and press Run. Build failures show
+in full in the Report navigator, which is the main reason to use this path.
+</Step>
+</Steps>
+
+Anything you change in Xcode (a capability, a build setting) is lost the next time `ios/` is
+regenerated. When you find a setting that is needed, move it into `app.json` or
+`plugins/with-square-mobile-payments.js`.
+
+## Simulator or iPhone
+
+The Simulator runs everything except taking a card by tap: setup, PINs, the register, cash and
+check sales, phone orders and organizer tools. To try card payments, use an iPhone XS or newer
+with a Debug build pointed at a storefront in the matching Square environment (see
+[sandbox builds](/docs/apps/fundraiser-app/square-sdk#sandbox-builds)). On a phone, set
+`EXPO_PUBLIC_API_URL` to your computer's LAN address, not `localhost`.
+
+## Signing and Tap to Pay
+
+The Square plugin adds the `com.apple.developer.proximity-reader.payment.acceptance`
+entitlement. A provisioning profile can only include it once Apple has granted **Tap to Pay on
+iPhone** to the team. Until then, device builds fail to sign with an error that the profile does
+not support the entitlement.
+
+To build without it, set the plugin option to `false` and regenerate:
+
+```json
+["./plugins/with-square-mobile-payments", { "applicationId": "sq0idp-…", "tapToPayOnIPhone": false }]
+```
+
+```bash
+npx expo prebuild --platform ios --clean
+```
+
+Keyed entry and Square Readers keep working. Do not commit the change unless the store build
+should ship without Tap to Pay as well.
+
+## Store builds
+
+Store builds are made in the cloud with EAS, so they do not need your Mac's signing setup:
+
+```bash
+npx eas-cli@latest login            # the Jose Madrid Expo account
+npx eas-cli@latest init             # once: links the project and writes its id into app.json
+npm run build:ios                   # eas build --platform ios --profile production
+npm run submit:ios                  # upload to App Store Connect
+```
+
+EAS creates and stores the certificates and profiles when asked. Build numbers increment
+remotely; bump `version` in `app.json` for each App Store release. The `preview` profile makes
+an internal-distribution build for testers' registered devices.
+
+## Troubleshooting
+
+<Accordions>
+<Accordion title="Pressing i in expo start opens Expo Go">
+Without a development build installed, `npx expo start` targets Expo Go, which can't run this
+app. Build it first with `npx expo run:ios`; after that, open the installed **Jose Madrid
+Fundraiser** app instead of scanning the QR code.
+</Accordion>
+<Accordion title='Build fails in "[CP] Embed Pods Frameworks" with lipo: open() failed, errno=17 (File exists) on MockReaderUI'>
+Square's setup script ran before CocoaPods embedded the frameworks. The current plugin adds its
+`[SquareMobilePaymentsSDK] setup` phase from `post_integrate` and places it right after
+`[CP] Embed Pods Frameworks`. Make sure your branch has that version of the plugin (fixed in the
+monorepo in pull request #560), then regenerate: `npx expo prebuild --platform ios --clean`.
+</Accordion>
+<Accordion title="with-square-mobile-payments: no import Expo line, or expects a Swift AppDelegate">
+Expo's `AppDelegate.swift` template changed shape, so the plugin could not find where to add
+Square's import or initializer. Compare the new template with the anchors in
+`withSquareIos()` in the plugin and update them; don't patch the generated file.
+</Accordion>
+<Accordion title="Provisioning profile doesn't include the proximity-reader entitlement">
+The team has not been granted Tap to Pay on iPhone. Build with `"tapToPayOnIPhone": false`
+as described in [signing and Tap to Pay](#signing-and-tap-to-pay).
+</Accordion>
+<Accordion title="Pod install fails or Square's pod can't be found">
+Update the CocoaPods spec repo (`pod repo update`), then run
+`npx expo prebuild --platform ios --clean` to reinstall. Check that `npm install` finished
+in `apps/fundraiser-app`, since the pod comes from `node_modules/mobile-payments-sdk-react-native`.
+</Accordion>
+<Accordion title="The Card option is missing">
+The Card option needs both the native module (`cardPaymentsAvailable`) and **Card payments with
+Square** turned on for the group on the storefront the app is talking to. Pull to refresh the
+home screen after changing the group setting.
+</Accordion>
+<Accordion title="Square sign-in fails when charging">
+The app's Square application id and the storefront's Square connection are in different
+environments (production and sandbox), or the storefront has no `SQUARE_LOCATION_ID` or Square
+connection. See [application id and environments](/docs/apps/fundraiser-app/square-sdk#application-id-and-environments).
+</Accordion>
+</Accordions>

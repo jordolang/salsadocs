@@ -1,0 +1,12 @@
+{
+  "title": "Fundraiser Mobile App",
+  "pages": [
+    "index",
+    "architecture",
+    "local-setup",
+    "configuration",
+    "square-sdk",
+    "ios",
+    "android"
+  ]
+}
