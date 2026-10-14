@@ -1,0 +1,171 @@
+---
+title: Admin Analytics and GA4 Reporting
+description: How the admin Analytics page pulls Google Analytics data, how its credential works, and how to fix each error it shows
+---
+
+# Admin Analytics and GA4 Reporting
+
+The **Google Analytics** cards at the top of `/admin/analytics` are read live from the GA4 Data API
+on every page load. Nothing is cached or synced to the database. This page explains how that request
+is built, which credential it uses, and what each message on the page means.
+
+For the click-by-click owner steps to replace an expired key, see
+[Google Analytics Service Account](/docs/owner-runbook/google-analytics-service-account).
+For client-side tracking (gtag), see [Google Analytics](/docs/integrations/google-analytics).
+
+## What lives where
+
+All paths are in `apps/storefront` of `jordolang/josemadridsalsa`.
+
+| File | Role |
+|------|------|
+| `app/admin/analytics/page.tsx` | Server component. Checks permissions, picks the date range, loads GA and store data in parallel |
+| `app/admin/analytics/actions.ts` | Server actions to save the GA settings and add or delete custom charts |
+| `app/admin/analytics/_components/GoogleAnalyticsConfig.tsx` | Settings card: Measurement ID, Property ID, Data stream ID, "Connected" / "Action required" badge |
+| `app/admin/analytics/_components/GoogleAnalyticsSummary.tsx` | The six summary cards, or the status message when they can't load |
+| `lib/google-analytics-reports.ts` | Builds the GA client from the saved credential and runs the reports |
+| `lib/google-analytics-config.ts` | Reads and writes the single `AnalyticsSetting` row (property ID, chart definitions) |
+| `lib/service-keys.ts` | Reads and decrypts secrets from the `ServiceKey` table |
+| `app/admin/settings/integrations/page.tsx` | Where an admin pastes or rotates the credential |
+
+Only the GA section depends on Google. The revenue, orders, funnel, abandoned cart and top product
+widgets further down the page come from the store's own database and keep working when GA fails.
+
+## Permissions
+
+| Permission | Allows |
+|------------|--------|
+| `analytics:read` | Viewing `/admin/analytics`. Without it the user is redirected to `/admin` |
+| `analytics:export` | Editing the GA settings form and adding or removing custom charts |
+
+## Request flow
+
+```text
+GET /admin/analytics?range=30d
+  └─ getGoogleAnalyticsDashboard(range)
+       1. getGoogleAnalyticsSettings()        AnalyticsSetting row → propertyId, chartDefinitions
+       2. hasActiveServiceKey('google_analytics', 'service_account')
+       3. getAnalyticsClient()
+            getDecryptedServiceKeyValue(...)  ServiceKey row → decrypt with MASTER_KEY
+            JSON.parse → service_account  → BetaAnalyticsDataClient({ credentials })
+                       → authorized_user  → BetaAnalyticsDataClient({ authClient: UserRefreshClient })
+       4. Promise.all
+            fetchSummaryCards()   one runReport, 6 metrics, no dimension
+            fetchCustomCharts()   one runReport per saved chart definition
+```
+
+The range comes from `?range=` and must be `7d`, `30d`, `90d` or `365d`. Anything else falls back to
+`30d`. Dates are sent to GA as `YYYY-MM-DD` covering today and the previous `days - 1` days.
+
+The property ID is normalized to `properties/<id>`, so the settings field accepts either `123456789`
+or `properties/123456789`. It is the numeric **Property ID**, not the `G-...` Measurement ID.
+
+### The credential
+
+The secret is a row in `ServiceKey` with `serviceName = google_analytics` and
+`keyName = service_account` (both stored lowercase). Its value is the full JSON file, encrypted at
+rest. Two JSON shapes are accepted:
+
+| `type` in the JSON | Fields read | Notes |
+|--------------------|-------------|-------|
+| `service_account` (or no `type`) | `client_email`, `private_key` | Recommended. Escaped `\n` in the private key are converted to newlines |
+| `authorized_user` | `client_id`, `client_secret`, `refresh_token` | A personal Google login. Its refresh token dies when Google forces re-authentication, which is why the page now fails with `invalid_grant` |
+
+Use a service account. The `authorized_user` path is kept only so an old credential still loads; it
+should not be used for new setups.
+
+A service account needs no Google Cloud IAM roles. Its access is granted inside Google Analytics
+(**Property access management → Viewer**), and the **Google Analytics Data API** must be enabled in
+the Google Cloud project that owns the account.
+
+## Statuses and messages
+
+`getGoogleAnalyticsDashboard()` returns a `status` and, when not ready, a `message` that the summary
+card shows verbatim (since PR #551; before that every failure showed "No Google Analytics metrics are
+available for this range yet."). The checks run in this order, so the first one that fails is the one
+you see.
+
+| Status | Message on the page | Trigger |
+|--------|--------------------|---------|
+| `missing-config` | Add your GA4 property ID to enable Google Analytics data. | `AnalyticsSetting.propertyId` is empty |
+| `missing-credentials` | Add a google_analytics/service_account secret under Integrations to connect GA4. | No `ServiceKey` row, or the row is disabled |
+| `missing-credentials` | Google Analytics credentials are misconfigured. Verify the service account JSON. | The value isn't valid JSON, is missing the fields in the table above, or can't be decrypted |
+| `error` | Google rejected the saved Google Analytics credential because it has expired or been revoked. Replace the google_analytics / service_account secret… | A GA call failed and the error text contains `invalid_grant` (includes Workspace re-auth `invalid_rapt`) |
+| `error` | Failed to load Google Analytics data. Check logs for details. | Any other failure in the summary report |
+| `ready` | (cards show numbers) | Summary report succeeded |
+
+The settings card badge reads **Connected** only for `ready`; every other status shows **Action
+required**. Its "Service account" line only checks that an enabled row exists, so it can say
+**Connected** while the summary shows an error.
+
+<Callout type="info" title="Custom charts fail quietly">
+Each custom chart runs its own report inside a `try/catch`. A chart that fails (for example an
+invalid metric and dimension combination) is logged as
+`[google-analytics] Failed to load custom chart` and dropped from the page; it does not change the
+status. If the summary cards load but a chart is missing, check the server logs for that line.
+</Callout>
+
+## Fixing an expired or broken key
+
+The full owner walkthrough is in the
+[owner runbook](/docs/owner-runbook/google-analytics-service-account). In short:
+
+<Steps>
+<Step>
+### Create the service account and key
+
+In console.cloud.google.com, pick the project, enable **Google Analytics Data API**, then **IAM &
+Admin → Service Accounts → Create service account** (no roles needed). Open it, **Keys → Add key →
+Create new key → JSON**. If key creation is blocked, the organization policy
+`iam.disableServiceAccountKeyCreation` must be overridden for that project.
+</Step>
+
+<Step>
+### Grant it Viewer on the GA4 property
+
+analytics.google.com → **Admin → Property access management → + → Add users**. Paste the service
+account's `...@<project>.iam.gserviceaccount.com` email and choose **Viewer**. Note the numeric
+**Property ID** under **Property details**.
+</Step>
+
+<Step>
+### Save it in the website admin
+
+1. `/admin/analytics`: confirm **GA4 Property ID** matches, and save if you changed it.
+2. `/admin/settings/integrations` → **Add or rotate credentials**: Service name `google_analytics`,
+   Key name `service_account`, paste the whole JSON file as **Secret value**, tick **Enable
+   immediately**, **Save integration**. Saving the same service and key name overwrites the old
+   value.
+</Step>
+
+<Step>
+### Verify
+
+Reload `/admin/analytics`. The badge should read **Connected** and the summary cards should show
+numbers. Then delete the downloaded JSON file.
+</Step>
+</Steps>
+
+## Troubleshooting
+
+| You see | Likely cause | What to do |
+|---------|--------------|------------|
+| "Add your GA4 property ID…" | Property ID field empty | Enter the numeric Property ID on `/admin/analytics` and save |
+| "Add a google_analytics/service_account secret…" | No credential saved, or it was disabled on the Integrations page | Save the key (step 3), or re-enable the existing row |
+| "Google Analytics credentials are misconfigured…" | Pasted only part of the file, or the wrong file | Paste the entire JSON again (starts with `{`, contains `"type": "service_account"`). If `MASTER_KEY` changed since the value was saved, decrypting fails too; re-save it |
+| "Google rejected the saved Google Analytics credential…" | The stored credential is a personal login whose refresh token expired, or the service account key was deleted in Google Cloud | Replace it with a new service account key (steps 1 to 3) |
+| "Failed to load Google Analytics data…" | Usually `PERMISSION_DENIED`: the service account isn't a Viewer on this property, the Property ID belongs to a different property, or the Data API isn't enabled | Recheck steps 1 and 2. Access changes can take a few minutes. Search the server logs for `[google-analytics] Failed to build dashboard` for Google's exact error |
+| Cards load, one custom chart is missing | That chart's report failed | Look for `[google-analytics] Failed to load custom chart` in the logs; delete and recreate the chart with a valid metric and dimension pair |
+| Summary shows zeros | The property has no data in the range, or the Property ID points at an empty property | Try the 90 day range; confirm the ID in GA Admin |
+
+<Callout type="warn" title="The Last used column does not update">
+The Integrations table has a **Last used** column, but the analytics code never writes
+`ServiceKey.lastUsed`, so it stays at **Never** for this key. Use the analytics page itself to
+confirm the key works.
+</Callout>
+
+## Rotating the key
+
+Google recommends replacing service account keys about once a year. Create a new key, save it over
+the old one on the Integrations page, confirm the analytics page loads, then delete the old key in
+Google Cloud under the service account's **Keys** tab.
