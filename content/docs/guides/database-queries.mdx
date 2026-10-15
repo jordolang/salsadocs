@@ -325,10 +325,10 @@ const revenue = await prisma.order.aggregate({
 // Create if not exists, update if exists
 const settings = await prisma.shippingSettings.upsert({
   where: { singleton: 'singleton' },
-  update: { freeShippingThreshold: 75.00 },
+  update: { flatRateCents: 799 },
   create: {
     singleton: 'singleton',
-    freeShippingThreshold: 75.00,
+    flatRateCents: 799,
   },
 })
 ```

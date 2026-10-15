@@ -223,7 +223,7 @@ SENTRY_DSN="..."
 ```
 
 <Callout type="info" title="Graceful Degradation">
-The platform is designed to run without most external services. Missing API keys trigger console warnings, but the app continues to function with fallback behavior (e.g., zero tax, free shipping, skipped emails).
+The platform is designed to run without most external services. Missing API keys trigger console warnings, but the app continues to function with fallback behavior (e.g., zero tax, flat-rate estimate shipping instead of live carrier rates, skipped emails). Shipping is never free: without `SHIPPING_API_KEY` the calculator quotes its flat-rate estimate ($6.99 domestic + $4.00 packaging fee).
 </Callout>
 
 ## Database Connection

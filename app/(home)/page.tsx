@@ -12,6 +12,9 @@ import {
   ShoppingCart,
   CreditCard,
   Truck,
+  LifeBuoy,
+  Code,
+  ArrowRight,
 } from 'lucide-react';
 import { AnimatedBackground } from '@/components/animated-background';
 import { FeatureCard } from '@/components/feature-card';
@@ -59,6 +62,36 @@ const sections = [
     href: '/docs/guides',
     icon: BookOpen,
     gradient: 'from-pink-500 to-rose-600',
+  },
+];
+
+const audiences = [
+  {
+    eyebrow: 'For customers',
+    title: 'Customer Help Center',
+    description:
+      'Ordering, shipping, fundraisers, your account, and fixes for common problems — in plain English.',
+    href: '/help',
+    cta: 'Get help',
+    icon: LifeBuoy,
+    gradient: 'from-amber-500 to-orange-600',
+    // Optional shortcuts shown on the splash card (e.g. { label: 'Track my order', href: '/help/shipping' })
+    quickLinks: [] as { label: string; href: string }[],
+  },
+  {
+    eyebrow: 'For developers',
+    title: 'Developer Documentation',
+    description:
+      'Setup, architecture, API reference, configuration, and deployment for the storefront platform.',
+    href: '/docs',
+    cta: 'Read the docs',
+    icon: Code,
+    gradient: 'from-red-600 to-red-700',
+    quickLinks: [
+      { label: 'Getting started', href: '/docs/getting-started' },
+      { label: 'API reference', href: '/docs/api' },
+      { label: 'Deployment', href: '/docs/deployment' },
+    ],
   },
 ];
 
@@ -119,10 +152,16 @@ export default function Home() {
             </Link>
             <Link
               href="/docs"
+              className="hidden sm:inline text-sm text-stone-500 hover:text-red-600 transition-colors"
+            >
+              Developers
+            </Link>
+            <Link
+              href="/help"
               className="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-red-600 to-red-500 rounded-xl hover:from-red-700 hover:to-red-600 transition-all shadow-lg hover:shadow-xl hover:shadow-red-600/25 hover:-translate-y-0.5 active:translate-y-0"
             >
-              <BookOpen className="w-4 h-4" />
-              Documentation
+              <LifeBuoy className="w-4 h-4" />
+              Get Help
             </Link>
           </div>
         </nav>
@@ -135,7 +174,7 @@ export default function Home() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
             </span>
-            Developer Documentation
+            Help Center &amp; Docs
           </div>
 
           {/* Title */}
@@ -143,35 +182,52 @@ export default function Home() {
             className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight text-stone-900 dark:text-white mb-6 leading-[1.05]"
             style={{ fontFamily: 'var(--font-volkhov), Volkhov, Georgia, serif' }}
           >
-            Build with
+            How can we
             <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-600 via-orange-500 to-amber-500 animate-[gradient-shift_6s_ease_infinite] bg-[length:200%_auto]">
-              Jose Madrid Salsa
+              help you?
             </span>
           </h1>
 
           {/* Subtitle */}
           <p className="text-lg md:text-xl text-stone-500 dark:text-stone-400 max-w-2xl mx-auto mb-12 leading-relaxed">
-            Feature guides, API reference, configuration blueprints, and deployment
-            workflows for the Jose Madrid Salsa e-commerce platform.
+            Shopping for salsa or running a fundraiser? Start with the Help Center.
+            Building on the platform? Head to the developer docs.
           </p>
 
-          {/* CTA buttons */}
-          <div className="flex flex-col sm:flex-row items-center gap-4 mb-16">
-            <Link
-              href="/docs/getting-started"
-              className="inline-flex items-center gap-2 px-8 py-4 text-base font-bold text-white bg-gradient-to-r from-red-600 to-red-500 rounded-2xl hover:from-red-700 hover:to-red-600 transition-all shadow-xl hover:shadow-2xl hover:shadow-red-500/30 hover:-translate-y-1 active:translate-y-0"
-            >
-              <Rocket className="w-5 h-5" />
-              Get Started
-            </Link>
-            <Link
-              href="/docs/api"
-              className="inline-flex items-center gap-2 px-8 py-4 text-base font-bold text-stone-700 dark:text-stone-200 bg-white/80 dark:bg-stone-800/80 backdrop-blur-sm rounded-2xl border border-stone-200 dark:border-stone-700 hover:border-red-300 dark:hover:border-red-700 transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 active:translate-y-0"
-            >
-              <Globe className="w-5 h-5" />
-              API Reference
-            </Link>
+          {/* Audience chooser */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl mb-16 text-left">
+            {audiences.map((a) => (
+              <div
+                key={a.href}
+                className="group relative flex flex-col rounded-3xl bg-white/85 dark:bg-stone-900/85 backdrop-blur-sm border border-stone-200 dark:border-stone-800 p-7 shadow-xl hover:shadow-2xl hover:border-red-300 dark:hover:border-red-800 transition-all"
+              >
+                <div className={`inline-flex w-12 h-12 items-center justify-center rounded-2xl bg-gradient-to-br ${a.gradient} text-white shadow-lg mb-5`}>
+                  <a.icon className="w-6 h-6" />
+                </div>
+                <p className="text-xs font-bold uppercase tracking-widest text-stone-400 mb-1">{a.eyebrow}</p>
+                <h2 className="text-2xl font-bold text-stone-900 dark:text-white mb-2">{a.title}</h2>
+                <p className="text-stone-500 dark:text-stone-400 leading-relaxed mb-5">{a.description}</p>
+                {a.quickLinks.length > 0 && (
+                  <ul className="space-y-1.5 mb-6 text-sm">
+                    {a.quickLinks.map((q) => (
+                      <li key={q.href}>
+                        <Link href={q.href} className="text-stone-600 dark:text-stone-300 hover:text-red-600 transition-colors">
+                          → {q.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <Link
+                  href={a.href}
+                  className={`mt-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 font-bold text-white bg-gradient-to-r ${a.gradient} rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all`}
+                >
+                  {a.cta}
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
+            ))}
           </div>
 
           {/* Stats */}
@@ -214,7 +270,7 @@ export default function Home() {
               className="text-3xl md:text-4xl font-bold text-stone-900 dark:text-white mb-4"
               style={{ fontFamily: 'var(--font-volkhov), Volkhov, Georgia, serif' }}
             >
-              Explore the Documentation
+              For Developers: Explore the Docs
             </h2>
             <p className="text-stone-500 dark:text-stone-400 max-w-lg mx-auto">
               Everything you need to understand, build upon, and deploy the platform.
@@ -285,7 +341,7 @@ export default function Home() {
               <p className="text-sm font-semibold text-stone-700 dark:text-stone-300">
                 Jose Madrid Salsa
               </p>
-              <p className="text-xs text-stone-400">Developer Documentation</p>
+              <p className="text-xs text-stone-400">Help Center &amp; Developer Docs</p>
             </div>
           </div>
           <div className="flex items-center gap-8 text-sm text-stone-500">
