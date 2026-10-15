@@ -3,6 +3,7 @@ import { DocsLayout } from 'fumadocs-ui/layouts/docs';
 import { RootProvider } from 'fumadocs-ui/provider/next';
 import type { ReactNode } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
@@ -50,7 +51,7 @@ export default function Layout({ children }: { children: ReactNode }) {
               </p>
               <p className="text-[11px] text-stone-600/80 dark:text-stone-400/70 leading-relaxed">
                 Can&apos;t find your answer?{' '}
-                <a href="https://www.josemadrid.net/contact" className="underline hover:text-red-600">
+                <a href="https://www.josemadridsalsa.com/contact" className="underline hover:text-red-600">
                   Contact us
                 </a>{' '}
                 and a real person will help.
@@ -59,19 +60,19 @@ export default function Layout({ children }: { children: ReactNode }) {
           ),
           footer: (
             <div className="px-2 py-3 border-t border-fd-border">
-              <a
+              <Link
                 href="/docs"
                 className="text-xs text-fd-muted-foreground hover:text-fd-primary transition-colors"
               >
                 Looking for developer docs? →
-              </a>
+              </Link>
             </div>
           ),
         }}
         links={[
-          { text: 'Shop Salsa', url: 'https://www.josemadrid.net/products', external: true },
-          { text: 'Fundraising', url: 'https://www.josemadrid.net/fundraising', external: true },
-          { text: 'Contact Us', url: 'https://www.josemadrid.net/contact', external: true },
+          { text: 'Shop Salsa', url: 'https://www.josemadridsalsa.com/products', external: true },
+          { text: 'Fundraising', url: 'https://www.josemadridsalsa.com/fundraising', external: true },
+          { text: 'Contact Us', url: 'https://www.josemadridsalsa.com/contact', external: true },
         ]}
       >
         {children}
