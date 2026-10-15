@@ -1,14 +1,23 @@
 ---
 title: Move the Fundraising Site
-description: Give fundraising.josemadrid.net its own Vercel project so fundraiser pages load again
+description: Give the fundraising site its own Vercel project (done; kept for reference and for redoing it)
 ---
 
 # Move the Fundraising Site to Its Own Vercel Project
 
+<Callout type="success" title="Done">
+Checked 12 October 2026: `fundraising.josemadridsalsa.com` is attached to the
+`josemadridsalsa-fundraising` Vercel project and its latest production deployment is Ready.
+`fundraising.josemadrid.net` is on the same project and redirects (308) to
+`fundraising.josemadridsalsa.com`. The fundraising site moved to the josemadridsalsa.com
+address on 7 October (josemadridsalsa #577), so the addresses below use it. Keep this page for
+reference, or if the project ever has to be rebuilt.
+</Callout>
+
 **Why:** the fundraising site and every fundraiser page (`/fundraising`, `/fundraisers/...`,
 `/f/...`, the fundraiser portal, the arena) became their own app on 6 October 2026
 (josemadridsalsa PR #563). The main site no longer serves those pages. Until
-`fundraising.josemadrid.net` is attached to a Vercel project that runs the new app, that
+`fundraising.josemadridsalsa.com` is attached to a Vercel project that runs the new app, that
 address shows the main site's home page instead of the fundraising site.
 
 **Time:** about 30 minutes, most of it re-entering settings.
@@ -16,11 +25,10 @@ address shows the main site's home page instead of the fundraising site.
 **You need:** Vercel owner access, and the original values for any setting marked
 *Sensitive* in Vercel (see step 2).
 
-<Callout type="info" title="State on 6 October 2026">
-Vercel has one project for this repository, `josemadridsalsa`, and `fundraising.josemadrid.net`
-is attached to it. There is also an older project named `josemadrid-fundraising` from June 2026.
-Don't reuse it unless its **Root Directory** is `apps/fundraising`; creating a fresh project is
-simpler.
+<Callout type="info" title="Older project">
+There is also an older Vercel project named `josemadrid-fundraising` from June 2026. Don't reuse
+it unless its **Root Directory** is `apps/fundraising`; the live site runs on
+`josemadridsalsa-fundraising`.
 </Callout>
 
 <Steps>
@@ -58,9 +66,9 @@ The two sites share the database, sign-in, payment, email and upload settings.
 
 | Setting | Value in the fundraising project |
 |---|---|
-| `NEXT_PUBLIC_SITE_URL` | `https://www.josemadrid.net` (the main site; change it on launch day, see [Launch](/docs/owner-runbook/launch-josemadridsalsa-com)) |
-| `NEXT_PUBLIC_FUNDRAISING_SITE_URL` | `https://fundraising.josemadrid.net` |
-| `NEXTAUTH_URL` | `https://fundraising.josemadrid.net` |
+| `NEXT_PUBLIC_SITE_URL` | `https://www.josemadridsalsa.com` (the main site) |
+| `NEXT_PUBLIC_FUNDRAISING_SITE_URL` | `https://fundraising.josemadridsalsa.com` |
+| `NEXTAUTH_URL` | `https://fundraising.josemadridsalsa.com` |
 
    The main project needs no change here; it already defaults to these addresses.
 
@@ -75,9 +83,9 @@ needs the fundraising address added (keep the main site's entries):
 
 | Provider | Where | Add |
 |---|---|---|
-| Google | Google Cloud console → APIs & Services → Credentials → the OAuth client | `https://fundraising.josemadrid.net/api/auth/callback/google` |
-| Facebook | developers.facebook.com → the app → Facebook Login → Settings → Valid OAuth Redirect URIs | `https://fundraising.josemadrid.net/api/auth/callback/facebook` |
-| Apple | developer.apple.com → Services ID → Return URLs | `https://fundraising.josemadrid.net/api/auth/callback/apple` |
+| Google | Google Cloud console → APIs & Services → Credentials → the OAuth client | `https://fundraising.josemadridsalsa.com/api/auth/callback/google` |
+| Facebook | developers.facebook.com → the app → Facebook Login → Settings → Valid OAuth Redirect URIs | `https://fundraising.josemadridsalsa.com/api/auth/callback/facebook` |
+| Apple | developer.apple.com → Services ID → Return URLs | `https://fundraising.josemadridsalsa.com/api/auth/callback/apple` |
 
 Skip any provider the site doesn't use.
 </Step>
@@ -85,21 +93,21 @@ Skip any provider the site doesn't use.
 <Step>
 ### Move the domain
 
-1. **josemadridsalsa → Settings → Domains**: remove `fundraising.josemadrid.net`.
-2. **josemadridsalsa-fundraising → Settings → Domains**: add `fundraising.josemadrid.net`.
+1. **josemadridsalsa → Settings → Domains**: remove `fundraising.josemadridsalsa.com` if it is
+   there.
+2. **josemadridsalsa-fundraising → Settings → Domains**: add `fundraising.josemadridsalsa.com`.
+3. Still in the fundraising project, add `fundraising.josemadrid.net` with **Redirect to**
+   `fundraising.josemadridsalsa.com`, **308**, so old links keep working.
 
-No DNS change is needed; josemadrid.net's DNS is already on Vercel. The site is unavailable for
-the minute between removing and adding.
-
-Leave `fundraising.josemadridsalsa.com` on the main project for now. It moves later, when the
-fundraising site changes address.
+The site is unavailable for the minute between removing and adding.
 </Step>
 
 <Step>
 ### Check it
 
-- [ ] `https://fundraising.josemadrid.net` shows the fundraising site, not the salsa store home page.
-- [ ] `https://www.josemadrid.net/fundraising` lands on `https://fundraising.josemadrid.net/fundraising`.
+- [ ] `https://fundraising.josemadridsalsa.com` shows the fundraising site, not the salsa store home page.
+- [ ] `https://fundraising.josemadrid.net` lands on `https://fundraising.josemadridsalsa.com`.
+- [ ] `https://www.josemadridsalsa.com/fundraising` lands on `https://fundraising.josemadridsalsa.com/fundraising`.
 - [ ] A fundraiser's page opens.
 - [ ] The fundraiser portal sign-in works.
 - [ ] Open a fundraiser referral link, add a jar and go to checkout: checkout stays on the
@@ -110,7 +118,7 @@ fundraising site changes address.
 
 ## If it goes wrong
 
-Move `fundraising.josemadrid.net` back to the `josemadridsalsa` project. That restores the
+Move `fundraising.josemadridsalsa.com` back to the `josemadridsalsa` project. That restores the
 current state (main site's home page on that address); a developer then has to revert PR #563 to
 bring the old fundraiser pages back on the main project.
 

@@ -6,7 +6,7 @@ itself lives in a separate monorepo, [`jordolang/josemadridsalsa`](https://githu
 
 Start here if you want to know what the platform is made of, how the pieces talk to each
 other, and where to go next. Everything below was checked against the monorepo at commit
-`12ec8fa` (6 October 2026).
+`86f75fd` (11 October 2026).
 
 > **Planning in progress.** The full outline for the rest of this documentation, and the
 > list of what is stale or missing today, is in
@@ -24,9 +24,9 @@ the cutover from the old josemadridsalsa.com store.
 
 | What | Who uses it | Where it lives | Code |
 |---|---|---|---|
-| **Storefront** | Shoppers, wholesale buyers | [www.josemadrid.net](https://www.josemadrid.net) | `apps/storefront` |
-| **Admin panel** | Jose Madrid staff | www.josemadrid.net/admin | `apps/storefront/app/admin` |
-| **Fundraising site** | Groups raising money and their supporters | [fundraising.josemadrid.net](https://fundraising.josemadrid.net) | `apps/fundraising` |
+| **Storefront** | Shoppers, wholesale buyers | [www.josemadridsalsa.com](https://www.josemadridsalsa.com) | `apps/storefront` |
+| **Admin panel** | Jose Madrid staff | www.josemadridsalsa.com/admin | `apps/storefront/app/admin` |
+| **Fundraising site** | Groups raising money and their supporters | [fundraising.josemadridsalsa.com](https://fundraising.josemadridsalsa.com) | `apps/fundraising` |
 | **Fundraiser mobile app** | Students and sellers taking orders | App Store and Google Play | `apps/fundraiser-app` |
 | **Desktop admin apps** | Staff at the office | Windows installer and macOS disk image | `apps/windows-admin`, `apps/macos-admin` |
 | **Self-order kiosks** | Customers at shows | Android tablet or iPad at the booth | `apps/android-kiosk`, `apps/ios-kiosk` |
@@ -43,8 +43,8 @@ flowchart LR
   booth([Customer at a show]) --> KIOSK
 
   subgraph Vercel
-    SF["Storefront + admin + APIs<br/>www.josemadrid.net"]
-    FR["Fundraising site<br/>fundraising.josemadrid.net"]
+    SF["Storefront + admin + APIs<br/>www.josemadridsalsa.com"]
+    FR["Fundraising site<br/>fundraising.josemadridsalsa.com"]
   end
 
   APP["Fundraiser app<br/>Expo / React Native"] -->|/api/fundraiser-app| SF
@@ -62,6 +62,7 @@ flowchart LR
   APP -->|Tap to Pay| SQ[Square]
   KIOSK -->|Square Terminal| SQ
   SF -->|paid orders, refunds| QB[QuickBooks Online]
+  SF -->|merch orders| PF[Printify<br/>print on demand]
 ```
 
 The short version of that picture:
@@ -84,6 +85,9 @@ The short version of that picture:
 - **Square takes in-person cards.** The fundraiser app (Tap to Pay or a Square Reader)
   and the kiosks (Square Terminal) charge through Jose Madrid's Square account.
 - **QuickBooks Online is the books.** Paid orders and refunds sync to it hourly.
+- **Printify prints the merch.** The `/merchandise` pages read the catalog live from every
+  shop on the Printify account (including the one connected to Etsy). Shoppers pay through a
+  Square payment link, and the paid order is sent to Printify, which prints and ships it.
 
 ## Each app at a glance
 
@@ -93,8 +97,9 @@ The primary Next.js 16 app and the home of almost all product code: the public s
 customer accounts, cart and checkout, recipes and the Heat Index blog, wholesale, the
 staff admin panel (`/admin`), the desktop shell (`/admin-desktop`), point of sale
 (`/pos`), kiosk screens (`/kiosk`), about fifty API groups under `app/api`, every
-webhook (`stripe`, `paypal`, `square`, `easypost`, `resend`, BigCommerce) and thirteen
-Vercel cron jobs.
+webhook (`stripe`, `paypal`, `square`, `easypost`, `resend`, BigCommerce) and fourteen
+Vercel cron jobs. It is also the API for the 3D Battle Arena game (`/api/arena/*`: sign-in,
+player profiles, leaderboards, friends and game codes).
 
 - **Run:** `npm run dev` from the monorepo root → http://localhost:3000
 - **Deploy:** Vercel project `josemadridsalsa`, root directory `apps/storefront`, `main` only.
@@ -106,7 +111,9 @@ Vercel cron jobs.
 Its own Next.js app and its own Vercel project, replacing the old
 josemadridsalsafundraising.com. It serves the fundraising site (home, shop, groups, cart,
 sign-up), every public fundraiser page (`/fundraisers`, `/f`, `/arena`), the fundraiser
-portal and their APIs. Its `/shop` reads the BigCommerce fundraising store live and hands
+portal and their APIs. It also serves the 3D Battle Arena game at `/battle-arena`
+(one static page copied in from the separate `battle-arena-3d` repository; each month's
+`/arena` page opens it), whose players sign in against the storefront's `/api/arena`. Its `/shop` reads the BigCommerce fundraising store live and hands
 carts to that store's checkout; the group list is BigCommerce's checkout dropdown. The
 storefront redirects (308) old fundraiser paths here, and this app sends main-site paths
 back.
@@ -132,9 +139,15 @@ storefront's `/api/fundraiser-app`. It is **not** an npm workspace; it has its o
 ### Desktop admin apps — `apps/windows-admin`, `apps/macos-admin`
 
 Native windows onto the real admin panel. Both open the desktop shell at
-`https://www.josemadrid.net/admin-desktop` and can reach every admin page from there, so a
+`https://www.josemadridsalsa.com/admin-desktop` and can reach every admin page from there, so a
 new admin feature reaches the desktop the day it deploys. They add native menus,
 printing, save dialogs, an offline screen, and on Windows, automatic updates.
+
+They also run the packing bench. With an 80mm receipt printer set up, every newly paid order
+from any channel prints an order ticket with its number as a barcode. **Pack & ship** then
+takes a scan of that ticket, a scan of every jar going into the box, and once the order is
+complete buys the cheapest postage, marks it shipped and prints the label and packing slip.
+Labels print on 4×6 label stock or, by default on a new install, on a letter sheet.
 
 - **Windows:** Electron 44 + TypeScript, packaged by electron-builder as an NSIS
   installer (`JoseMadridSalsaAdmin-Setup-<version>.exe`). Run with
@@ -189,7 +202,7 @@ There are two copies of the developer documentation today, and they have drifted
 
 | | This repo (`salsadocs`) | Monorepo `apps/docs` |
 |---|---|---|
-| Pages | 115 | 169 |
+| Pages | 114 (plus the owner runbook) | 170 |
 | Last synced | June 2026 | Current |
 | Covers BigCommerce, fundraising site, mobile app, kiosks, desktop apps | No | Yes |
 

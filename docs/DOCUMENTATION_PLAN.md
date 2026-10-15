@@ -4,7 +4,8 @@ The plan for turning this repository into complete, easy-to-follow documentation
 Jose Madrid Salsa platform. It records what the platform is made of today, what the docs
 already cover, what is stale or missing, and the outline every new page will fit into.
 
-Surveyed against `jordolang/josemadridsalsa` at commit `12ec8fa` (6 October 2026).
+Surveyed against `jordolang/josemadridsalsa` at commit `12ec8fa` (6 October 2026); inventory,
+domains and known inaccuracies refreshed against `86f75fd` (11 October 2026).
 
 ---
 
@@ -38,7 +39,7 @@ What exists in the monorepo today, and how each piece is built, run and deployed
 | App | Path | Stack | Run locally | Build and deploy |
 |---|---|---|---|---|
 | Storefront (+ admin, POS, kiosk screens, desktop shell, all webhooks and crons) | `apps/storefront` | Next.js 16, React 19, Prisma 6, NextAuth 4 | `npm run dev` → :3000 | Vercel project `josemadridsalsa`, root `apps/storefront`, `main` only; `vercel-build` runs migrate, generate, permission seed, `next build` |
-| Fundraising site + fundraiser pages, portal, arena | `apps/fundraising` | Next.js 16, shares core + storefront Prisma schema | `npm run dev:fundraising` → :3001 | Own Vercel project, `main` only, `turbo-ignore`; `vercel-build` generates Prisma from `../storefront/prisma/schema.prisma` |
+| Fundraising site + fundraiser pages, portal, arena, 3D Battle Arena game (`/battle-arena`) | `apps/fundraising` | Next.js 16, shares core + storefront Prisma schema | `npm run dev:fundraising` → :3001 | Vercel project `josemadridsalsa-fundraising`, `main` only, `turbo-ignore`; `vercel-build` generates Prisma from `../storefront/prisma/schema.prisma` |
 | Fundraiser mobile app | `apps/fundraiser-app` | Expo SDK 57, React Native 0.86, Expo Router, Square Mobile Payments SDK via config plugin | `npx expo start`; dev build needed for Square | EAS Build / Submit (`build:ios`, `build:android`, `submit:*`); not an npm workspace |
 | Windows admin | `apps/windows-admin` | Electron 44, TypeScript, electron-updater | `npm run start --workspace=@jose-madrid/windows-admin` | **Desktop Apps** workflow → NSIS installer, optional code signing, update feed on Vercel Blob via `/api/desktop/updates` |
 | macOS admin | `apps/macos-admin` | Swift package, SwiftUI + WKWebView | `./build-app.sh` | Same workflow → `.dmg`, optional Developer ID signing and notarisation |
@@ -65,12 +66,17 @@ What exists in the monorepo today, and how each piece is built, run and deployed
   webhook (`/api/webhooks/bigcommerce`) and the hourly `/api/cron/bigcommerce-orders` job.
   Client code is in `packages/core/lib/bigcommerce` and `apps/storefront/lib/bigcommerce`.
 - **Mobile app.** Talks only to `/api/fundraiser-app/*` on the storefront
-  (`EXPO_PUBLIC_API_URL`, default `https://www.josemadrid.net`). Gets a Square OAuth token
+  (`extra.apiUrl` in `app.json`, `https://www.josemadridsalsa.com`). Gets a Square OAuth token
   from the storefront; payments land at `SQUARE_LOCATION_ID`.
 - **Desktop and kiosk apps.** Load storefront pages (`/admin-desktop`, `/kiosk`) and so
   share its sessions, data and deploys.
 - **QuickBooks.** Hourly `/api/cron/quickbooks-sync`; BigCommerce orders only sync when
   `BIGCOMMERCE_ORDERS_TO_QUICKBOOKS=true`.
+- **Printify.** Merch on `/merchandise` is read live from every Printify shop on the account
+  (`PRINTIFY_API_TOKEN`, optional `PRINTIFY_SHOP_ID` list), paid through a Square payment link
+  and submitted to Printify; `/api/cron/merch-orders` sweeps paid orders every 15 minutes.
+- **Battle Arena game.** The 3D game served by the fundraising app signs players in and stores
+  profiles, leaderboards, friends and game codes through the storefront's `/api/arena/*`.
 - **Email, social, analytics.** Resend + Nodemailer, scheduled publishing crons, Sentry,
   Amplitude, Vercel Analytics, all from the storefront.
 
@@ -78,18 +84,22 @@ What exists in the monorepo today, and how each piece is built, run and deployed
 
 | Host | Serves |
 |---|---|
-| www.josemadrid.net | Storefront, admin, APIs |
-| fundraising.josemadrid.net | Fundraising app |
-| josemadridsalsa.com | Legacy BigCommerce storefront; moving in front of this platform per the cutover runbook |
+| www.josemadridsalsa.com | Storefront, admin, APIs (canonical since 7 October 2026, josemadridsalsa #577) |
+| josemadridsalsa.com | 308 redirect to www |
+| fundraising.josemadridsalsa.com | Fundraising app (Vercel project `josemadridsalsa-fundraising`) |
+| shop.josemadridsalsa.com | BigCommerce main store: hosted checkout and customer accounts |
+| battle.josemadridsalsa.com | The `battle-arena-3d` game's own deployment |
+| josemadrid.net, www.josemadrid.net | 308 to the same path on www.josemadridsalsa.com, except `/api`, which still answers so webhooks and installed apps keep working (`apps/storefront/domain-redirects.mjs`). Kept for future side apps |
+| fundraising.josemadrid.net | 308 to fundraising.josemadridsalsa.com |
 | josemadridsalsafundraising.com | Legacy BigCommerce fundraising store and its checkout |
 
 ## 4. Current state of the docs
 
 | | This repo | Monorepo `apps/docs` |
 |---|---|---|
-| MDX pages | 115 | 169 |
-| Pages only here | 2 (`integrations/shopify*.mdx`, Shopify is no longer used) | 56 |
-| Shared pages whose text differs | 42 | |
+| MDX pages | 114 mirrored, plus 7 owner-runbook pages written here | 170 |
+| Pages only here | 2 (`integrations/shopify*.mdx`, Shopify is no longer used) | 58 |
+| Shared pages whose text differs | 54 | |
 | Last change | June 2026 | Ongoing, ships with code |
 
 **Missing here entirely** include the BigCommerce cutover runbook, the fundraising site,
@@ -100,12 +110,12 @@ permissions, and the testing and versioning guides.
 **Known inaccuracies to fix wherever they live:**
 
 - `deployment/vercel.mdx` says no `vercel.json` is used; the storefront has one with a
-  custom build command and 13 crons.
+  custom build command and 14 crons (`merch-orders` was added for Printify).
 - The monorepo `README.md` and `CLAUDE.md` describe four apps; there are eleven
   directories under `apps/`, and `CLAUDE.md` refers to `apps/ios/**`, which does not exist
   (the iPad app is `apps/ios-kiosk`).
 - `deployment/monorepo.mdx` lists fundraising as "once its project is created", but
-  `fundraising.josemadrid.net` is live.
+  `fundraising.josemadridsalsa.com` is live on its own project.
 - Node versions disagree (`.nvmrc` 20, CI 22, Vercel storefront 22, Vercel docs 20).
 - The monorepo README links to screenshot placeholders that are not in the repo.
 
@@ -146,14 +156,14 @@ Keep the existing feature pages, regrouped under *Selling*, *Fundraising*, *Even
 *Marketing*, *Money*, *Content* and *Admin*, each opening with a "How do I…" task list.
 
 ### Integrations
-BigCommerce, Square, Stripe, PayPal, QuickBooks, EasyPost, Resend and email DNS, Google,
+BigCommerce, Square, Stripe, PayPal, QuickBooks, EasyPost, Printify, Resend and email DNS, Google,
 social platforms, UploadThing, Sentry and Amplitude. Remove the Shopify pages.
 
 ### Operations
 - Deploying: Vercel projects, domains, `main`-only deploys, `turbo-ignore`, rollback
 - Releasing the desktop apps (Desktop Apps workflow, signing secrets, update feed) (**new**)
 - Releasing the mobile app (EAS, store review, OTA updates) (**new**)
-- Scheduled jobs: all 13 crons, what each does and what to do when one fails
+- Scheduled jobs: all 14 crons, what each does and what to do when one fails
 - Webhooks: every inbound webhook, its secret and how to replay it (**new**)
 - Database: migrations, backups, Supabase, the green-build-failed-migration trap
 - Environment variables, per Vercel project (**new** per-project split)
@@ -170,7 +180,7 @@ Quick start, adding a feature, testing, code quality, debugging, versioning, API
    Actions workflow in the monorepo runs on every push to `main` that touches
    `apps/docs/content/**`, copies `content/docs` into this repo with a token scoped to
    it, and commits only when something changed. The first run closes the current gap
-   (56 missing pages, 42 stale ones) and removes the Shopify pages. The admin panel's
+   (58 missing pages, 54 stale ones as of 11 October) and removes the Shopify pages. The admin panel's
    existing per-page publisher (`/admin/developer/salsadocs`, which writes straight to this
    repo through `SALSADOCS_GITHUB_TOKEN`) would be overwritten by the next sync, so it
    should write to `apps/docs` instead, or be retired.
@@ -187,6 +197,5 @@ Quick start, adding a feature, testing, code quality, debugging, versioning, API
 
 - Should the sync mirror only page content, or also the site code (`app/`, `components/`),
   so this site looks identical to `apps/docs`?
-- Is `fundraising.josemadridsalsa.com` still the planned long-term host?
 - How are the kiosk apps installed on the tablets today (sideload, MDM, TestFlight)?
 - Is the fundraiser app already live in both stores, or still in internal testing?
