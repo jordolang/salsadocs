@@ -1,0 +1,99 @@
+---
+title: Connect Trackers in BigCommerce
+description: Connect Google Analytics 4, the Meta pixel and the TikTok pixel inside BigCommerce so purchases on its checkout are counted
+---
+
+# Connect Purchase Trackers in BigCommerce
+
+**Why:** shoppers now pay on BigCommerce's checkout, not on the website. The website reports
+"checkout started" to Google Analytics, Meta and TikTok at the hand-off, but the **purchase**
+itself happens on BigCommerce's pages, which only BigCommerce's own tracker connections can
+see. Today none are connected, so no purchase is recorded anywhere. Without purchases, ad
+platforms can't optimize for sales and Google Analytics revenue reads zero.
+
+**Time:** 20 to 30 minutes.
+
+**You need:** BigCommerce owner login, and logins for Google Analytics, Meta Business (Events
+Manager) and TikTok Ads Manager.
+
+## The accounts to use
+
+Connect BigCommerce to the **same** accounts the website already uses, so a visit and its
+purchase land in one place:
+
+| Tracker | ID the website uses | Where to find it |
+|---|---|---|
+| Google Analytics 4 | The GA4 property behind the website's Google Tag Manager container `GTM-NTWG6BQW` | Website admin → **Analytics** → **Google Tag (Measurement ID)**, a `G-...` code |
+| Meta pixel | `2546527762445636` | Meta Events Manager → Data sources |
+| TikTok pixel | `D8OEDO3C77U56UIVDE3G` | TikTok Ads Manager → Tools → Events |
+
+These IDs are public (they appear in every page's source), so it's fine that they're written here.
+
+<Callout type="info" title="Menu names move around">
+BigCommerce renames admin menus from time to time. The paths below were right when written; if
+one has moved, search the BigCommerce admin for the tracker's name.
+</Callout>
+
+<Steps>
+<Step>
+### Google Analytics 4
+
+1. BigCommerce → **Settings → Data solutions**.
+2. Find **Google Analytics 4** and click **Connect** (or **Set up**).
+3. Sign in with the Google account that owns the website's GA4 property, and choose that
+   property and its web data stream. If BigCommerce asks for a measurement ID instead, paste the
+   `G-...` code from the website admin.
+4. Save.
+
+Then make Google treat both sites as one journey:
+
+1. **analytics.google.com → Admin → Data streams** → the website's web stream.
+2. **Configure tag settings → Configure your domains**.
+3. Add one condition per domain, match type **contains**:
+   `josemadrid.net`, `josemadridsalsa.com`, `shop.josemadridsalsa.com`.
+4. Save.
+</Step>
+
+<Step>
+### Meta pixel
+
+1. BigCommerce → **Settings → Data solutions** → **Meta Pixel** (it may be listed as
+   **Facebook Pixel**), or **Channel Manager → Facebook by Meta** if the store uses Meta's
+   channel app.
+2. Connect the Meta Business account and choose pixel `2546527762445636`. If asked for an ID,
+   paste it.
+3. Turn on purchase events if there's a separate switch for them. Save.
+</Step>
+
+<Step>
+### TikTok pixel
+
+1. BigCommerce → **Channel Manager** → **TikTok** (install **TikTok for BigCommerce** from the
+   Apps marketplace if it isn't listed).
+2. Connect the TikTok Business account and choose pixel `D8OEDO3C77U56UIVDE3G`. Don't let it
+   create a new pixel.
+3. Save.
+</Step>
+</Steps>
+
+## Check it
+
+Easiest done together with the [test order](/docs/owner-runbook/bigcommerce-test-order):
+
+- [ ] **Google Analytics → Reports → Realtime**: while you check out, a `begin_checkout` event
+      appears, then `purchase` after you pay. (Standard reports can take up to a day.)
+- [ ] **Meta Events Manager → the pixel → Test events** (or Overview): a **Purchase** event
+      arrives from `shop.josemadridsalsa.com`.
+- [ ] **TikTok Ads Manager → Events → the pixel**: a **Complete payment** (or Purchase) event
+      arrives.
+
+Refunding the test order doesn't remove the purchase event; a single test purchase in the
+numbers is expected.
+
+## Things to avoid
+
+- **Don't add the same tracker twice.** If BigCommerce already has a "Script Manager" script
+  for Google Analytics, Meta or TikTok from the old store, remove it after connecting through
+  Data solutions, or every purchase counts twice. Check **Storefront → Script Manager**.
+- **Don't create new pixels or properties.** Purchases recorded under a different ID won't
+  join up with the website's visits or with your existing ad audiences.

@@ -1,0 +1,225 @@
+---
+title: Launch on josemadridsalsa.com
+description: Finish moving the new site from josemadrid.net to josemadridsalsa.com, with BigCommerce on shop.josemadridsalsa.com, and what to check
+---
+
+# Launch the New Site as josemadridsalsa.com
+
+**Goal:** one site at `https://www.josemadridsalsa.com`. Every old address
+(`josemadrid.net`, the old BigCommerce pages) redirects to it, BigCommerce keeps running checkout
+and customer accounts at `shop.josemadridsalsa.com`, and Google is told about the move.
+
+**Time:** an afternoon, with an hour of checking afterwards. Pick a quiet time of day.
+
+## Where things stand
+
+Checked on 6 October 2026 from Vercel's settings and public DNS:
+
+| Piece | State |
+|---|---|
+| `josemadridsalsa.com` and `www.josemadridsalsa.com` added to the Vercel project | ✅ Done, verified |
+| Their DNS points at Vercel; `www.josemadridsalsa.com` serves the new site | ✅ Done |
+| `shop.josemadridsalsa.com` points at the BigCommerce store | ✅ DNS done. Not checked: that BigCommerce has moved the storefront **and checkout** address to it |
+| BigCommerce checkout switched on (`NEXT_PUBLIC_COMMERCE_BACKEND`) | ✅ Set in production |
+| The site knows its new address (`NEXT_PUBLIC_SITE_URL` and friends) | ❌ Not set. The site still calls itself josemadrid.net: its `robots.txt` on josemadridsalsa.com points Google at `https://www.josemadrid.net/sitemap.xml` |
+| Bare `josemadridsalsa.com` redirects to `www` | ❌ Serves the site directly |
+| `josemadrid.net` redirects to josemadridsalsa.com | ❌ Still redirects to `www.josemadrid.net` |
+| Webhooks and sign-in callbacks moved to the new address | ❌ Not done |
+| Search Console told about the move | ❌ Not done |
+
+So the site is already reachable at the new address, but it's running under two names and
+still introduces itself by the old one. The steps below finish the job in a safe order.
+
+<Callout type="warn" title="Keep the order">
+Webhooks (Stripe, PayPal, Square, BigCommerce…) don't follow redirects. Move them to the new
+address (step 5) **before** turning on the josemadrid.net redirect (step 6), or payments and
+order updates will start failing silently.
+</Callout>
+
+<Steps>
+<Step>
+### 1. Confirm BigCommerce lives on shop.josemadridsalsa.com
+
+1. Open `https://shop.josemadridsalsa.com`. It should load the old store with a padlock (HTTPS).
+2. Do the [test order](/docs/owner-runbook/bigcommerce-test-order) from the new site. Checkout
+   must open on `shop.josemadridsalsa.com`.
+
+If either fails, ask BigCommerce support:
+
+> Please change the primary URL **and** the checkout URL of our storefront channel
+> "Jose Madrid Salsa" (channel 1) from `josemadridsalsa.com` to `shop.josemadridsalsa.com`. We
+> are using a headless storefront on the main domain. The DNS record for the subdomain already
+> points to our store.
+
+Don't go further until checkout opens on the `shop.` address.
+</Step>
+
+<Step>
+### 2. Hide the old store from Google
+
+At `shop.josemadridsalsa.com` the old store still shows every product page, which Google would
+treat as copies of the new site's pages.
+
+1. BigCommerce → **Settings → Storefront** (or **Storefront → Search engine robots**) → the
+   robots.txt for the **Jose Madrid Salsa** storefront.
+2. Replace everything in it with:
+
+   ```text
+   User-agent: *
+   Disallow: /
+   ```
+
+3. Save.
+
+Do this only **after** step 1 passes. Before BigCommerce moves the storefront, that same
+robots.txt belongs to josemadridsalsa.com. Checkout keeps working either way.
+</Step>
+
+<Step>
+### 3. Make the bare domain redirect to www
+
+Vercel → **josemadridsalsa → Settings → Domains** → `josemadridsalsa.com` → **Edit** →
+**Redirect to** `www.josemadridsalsa.com`, status **308 Permanent Redirect** → Save.
+</Step>
+
+<Step>
+### 4. Tell the site its new address
+
+1. Vercel → **josemadridsalsa → Settings → Environment Variables**, **Production**. Add (or
+   change) each of these:
+
+   | Name | Value |
+   |---|---|
+   | `NEXT_PUBLIC_SITE_URL` | `https://www.josemadridsalsa.com` |
+   | `NEXT_PUBLIC_BASE_URL` | `https://www.josemadridsalsa.com` |
+   | `NEXT_PUBLIC_APP_URL` | `https://www.josemadridsalsa.com` |
+   | `NEXTAUTH_URL` | `https://www.josemadridsalsa.com` |
+   | `BIGCOMMERCE_STOREFRONT_URL` | `https://shop.josemadridsalsa.com` |
+
+   Leave `BIGCOMMERCE_CHANNEL_ID` unset unless BigCommerce support moved checkout to a channel
+   other than 1.
+2. In the **fundraising** project (if you've done the
+   [fundraising move](/docs/owner-runbook/fundraising-site-move)), set `NEXT_PUBLIC_SITE_URL` to
+   `https://www.josemadridsalsa.com` too.
+3. Website admin → **SEO** → **Site URL**: `https://www.josemadridsalsa.com`. Save.
+4. Vercel → **Deployments** → the latest production deployment → **⋯ → Redeploy** (both
+   projects). The `NEXT_PUBLIC_` settings only take effect on a new build.
+5. Check: `https://www.josemadridsalsa.com/robots.txt` now ends with
+   `Sitemap: https://www.josemadridsalsa.com/sitemap.xml`.
+</Step>
+
+<Step>
+### 5. Move webhooks and sign-in callbacks to the new address
+
+Change each of these to `https://www.josemadridsalsa.com/...`. Where a service allows several
+addresses (sign-in providers), **add** the new one and keep the old one until a week after
+launch.
+
+| Service | Where | Address |
+|---|---|---|
+| Stripe | Dashboard → Developers → Webhooks → the endpoint → Update details | `/api/webhooks/stripe` |
+| PayPal | developer.paypal.com → Apps → the live app → Webhooks | `/api/webhooks/paypal` |
+| Square | developer.squareup.com → the app → Webhooks (production) | `/api/webhooks/square`, **and** set `SQUARE_WEBHOOK_URL` in Vercel to the same full address, then redeploy |
+| EasyPost | EasyPost dashboard → Webhooks | `/api/webhooks/easypost` |
+| Resend | resend.com → Webhooks | `/api/webhooks/resend` |
+| Google sign-in | Google Cloud console → APIs & Services → Credentials → OAuth client → Authorized redirect URIs | add `/api/auth/callback/google` |
+| Facebook / Apple / GitHub sign-in | Each provider's app settings | add `/api/auth/callback/<provider>` |
+| QuickBooks | developer.intuit.com → the app → Redirect URIs (production) | add `/api/integrations/quickbooks/callback` |
+
+**BigCommerce webhooks** are registered by a command, not in a dashboard. Ask a developer (or
+Claude) to run, from `apps/storefront` with production settings:
+
+```bash
+npm run bigcommerce:webhooks -- https://www.josemadridsalsa.com
+npm run bigcommerce:webhooks -- https://www.josemadridsalsa.com --store fundraising
+```
+
+After saving each one, use the service's **Send test** button where it has one (Stripe does):
+it should return **200**.
+</Step>
+
+<Step>
+### 6. Redirect josemadrid.net to the new domain
+
+Vercel → **josemadridsalsa → Settings → Domains**:
+
+1. `www.josemadrid.net` → **Edit** → **Redirect to** `www.josemadridsalsa.com`, **308** → Save.
+2. `josemadrid.net` → **Edit** → **Redirect to** `www.josemadridsalsa.com`, **308** → Save.
+   (Today it redirects to `www.josemadrid.net` with a 307; change both the target and the code.)
+
+Leave `fundraising.josemadrid.net` alone; it's the fundraising site's address.
+</Step>
+
+<Step>
+### 7. Check everything
+
+- [ ] `https://www.josemadridsalsa.com` loads the new site; `https://josemadridsalsa.com` lands on `www`.
+- [ ] `https://www.josemadrid.net/salsas` lands on `https://www.josemadridsalsa.com/salsas`.
+- [ ] Old BigCommerce addresses land on real pages: `/original-hot/`, `/choose-6/`, `/cart.php`,
+      `/login.php`.
+- [ ] A checkout opens on `shop.josemadridsalsa.com`, and the
+      [test order](/docs/owner-runbook/bigcommerce-test-order) passes again.
+- [ ] `https://shop.josemadridsalsa.com/robots.txt` says `Disallow: /`;
+      `https://www.josemadridsalsa.com/robots.txt` does **not**.
+- [ ] Signing in with Google works on the new address.
+- [ ] Stripe's test webhook returns 200.
+- [ ] The Mac and Windows admin apps, the kiosks and the fundraiser phone app still connect.
+      They have `josemadrid.net` built in and follow the redirect; sign in again if asked.
+- [ ] Website admin → Orders: new BigCommerce orders keep arriving as `BC-` copies.
+</Step>
+
+<Step>
+### 8. Tell Google (Search Console)
+
+Only a person can do this. Use the Google account that manages the josemadrid.net property.
+
+1. Add (or open) the **josemadridsalsa.com** property. If the old store's property already
+   exists, use it. A *Domain* property covers `www` and `shop`; a URL-prefix property must be
+   `https://www.josemadridsalsa.com/`.
+2. In it, **Sitemaps** → submit `https://www.josemadridsalsa.com/sitemap.xml`.
+3. In the **josemadrid.net** property: **Settings → Change of address** → choose
+   josemadridsalsa.com → follow the checks → **Confirm & move**. This needs the redirects from
+   step 6 to be live.
+4. **URL Inspection** → **Request indexing** for the home page, `/salsas` and two product pages
+   on `https://www.josemadridsalsa.com`.
+5. **In a few weeks:** the josemadridsalsa.com property's indexed-page count should be rising
+   and josemadrid.net's falling.
+</Step>
+
+<Step>
+### 9. A week later: replace the BigCommerce API keys
+
+The BigCommerce API keys used while building the site were shared during development. Once the
+site has run cleanly for a week:
+
+1. In each store (main and fundraising): BigCommerce → **Settings → API → Store-level API
+   accounts** → **Create API account**, with the same scopes as the current one (a developer can
+   list them; they're in the app repo's environment variable docs).
+2. Put the new values into Vercel (`BIGCOMMERCE_*` for the main store,
+   `BIGCOMMERCE_FUNDRAISING_*` for the fundraising store) in **both** projects, and redeploy.
+3. Check a salsa page still shows its price and a checkout still reaches BigCommerce.
+4. Delete the old API account in each store.
+5. Remove the old josemadrid.net sign-in callback addresses you kept in step 5.
+</Step>
+</Steps>
+
+## If you need to undo it
+
+- **Site broken after a redeploy:** Vercel → Deployments → the previous one → **Promote to
+  Production**. Takes effect in seconds.
+- **Undo the josemadrid.net redirect:** set `josemadrid.net` back to redirect to
+  `www.josemadrid.net`, and remove the redirect on `www.josemadrid.net`.
+- **Go back to the old BigCommerce store on josemadridsalsa.com:** point the
+  `josemadridsalsa.com` and `www` DNS records back at BigCommerce and ask BigCommerce support to
+  restore channel 1's primary and checkout address to `josemadridsalsa.com`. Then clear the
+  robots.txt from step 2. How fast this is depends on BigCommerce support.
+
+## After launch: who to call
+
+- **Checkout, payments, order emails, the BigCommerce admin:** BigCommerce support. Tell them
+  the store uses a headless storefront with BigCommerce's hosted checkout on channel 1.
+- **The website itself:** a developer, or Claude in this project. Vercel → Deployments can roll
+  back in one click.
+- **Price or stock edits not showing on the site:** re-run the BigCommerce webhook command in
+  step 5. BigCommerce switches a webhook off after repeated failed deliveries. Pages also
+  refresh on their own within five minutes.

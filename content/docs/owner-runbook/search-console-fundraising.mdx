@@ -1,0 +1,96 @@
+---
+title: Search Console for the Fundraising Site
+description: Verify fundraising.josemadrid.net in Google Search Console, submit its sitemap and ask Google to crawl it
+---
+
+# Verify fundraising.josemadrid.net in Search Console
+
+**Why:** Search Console is where Google tells you whether it can find and index a site's
+pages. The fundraising site has its own address and its own sitemap, so it needs its own
+entry ("property") to submit that sitemap and see its search results.
+
+**Time:** 10 minutes, then a check-back in a few weeks.
+
+**You need:** the Google account that already manages the `josemadrid.net` property in Search
+Console.
+
+<Callout type="warn" title="Do the fundraising move first">
+Until [the fundraising site has its own Vercel project](/docs/owner-runbook/fundraising-site-move),
+`fundraising.josemadrid.net` shows the main store's home page. Verification would still pass,
+but Google would read the wrong sitemap.
+</Callout>
+
+<Steps>
+<Step>
+### See whether it's already covered
+
+Go to **search.google.com/search-console** and open the property list (top left).
+
+- If there's a property called just **josemadrid.net** (no `https://`), that's a *Domain
+  property*. It already covers every subdomain, so `fundraising.josemadrid.net` is verified.
+  You can still add the separate property below to get the fundraising site's own reports and
+  submit its sitemap; it will usually verify instantly.
+- If you only see **https://www.josemadrid.net/**, continue with step 2.
+</Step>
+
+<Step>
+### Add the property
+
+1. **Add property**.
+2. Choose the right-hand box, **URL prefix**, and enter `https://fundraising.josemadrid.net/`.
+3. Click **Continue**.
+</Step>
+
+<Step>
+### Verify ownership
+
+Pick **HTML tag** from the list of methods and click **Verify**. The fundraising site already
+carries the same verification tag as the main site, so this passes when you're signed in as
+the Google account that verified josemadrid.net.
+
+If it fails ("couldn't find your meta tag" or a different code), use a DNS record instead:
+
+1. In Search Console, choose **Domain name provider** and copy the `google-site-verification=...`
+   text it shows.
+2. Vercel → **Domains** (team level) → **josemadrid.net** → **DNS Records** → **Add**:
+   - Name: leave empty (or `@`)
+   - Type: `TXT`
+   - Value: the text you copied
+3. Wait a few minutes, then click **Verify** in Search Console.
+</Step>
+
+<Step>
+### Submit the sitemap
+
+In the new property: **Sitemaps** (left menu) → enter `sitemap.xml` → **Submit**. The full
+address is `https://fundraising.josemadrid.net/sitemap.xml`. Status should read **Success**
+within a day. It lists the home page, the shop and its products, and every group page.
+</Step>
+
+<Step>
+### Ask Google to crawl the key pages
+
+In the top search bar of the property, run **URL Inspection** on each of these and click
+**Request indexing**:
+
+- `https://fundraising.josemadrid.net/`
+- `https://fundraising.josemadrid.net/shop`
+- `https://fundraising.josemadrid.net/groups`
+- `https://fundraising.josemadrid.net/start`
+</Step>
+</Steps>
+
+## Check it
+
+- [ ] The property shows as verified (Settings → Ownership verification).
+- [ ] Sitemaps shows `sitemap.xml` with status **Success** and a discovered-page count above zero.
+- [ ] **In a few weeks:** Pages (Indexing) shows the indexed count rising. If it stays at zero,
+      check the **Why pages aren't indexed** table there.
+
+## When the address changes later
+
+The plan is for the fundraising site to move to `fundraising.josemadridsalsa.com`. When that
+happens, add that address as a property the same way and submit its sitemap. Then, in this
+property, try **Settings → Change of address** to point Google at the new one. If Search Console
+doesn't offer it for this property, the site's redirects plus the new sitemap are enough; Google
+follows them on its own.

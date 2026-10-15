@@ -1,0 +1,73 @@
+---
+title: Owner Runbook
+description: The jobs only the owner can do to finish launching the new site, in order, in plain language
+---
+
+# Owner Runbook
+
+These pages cover the jobs that need **you**: someone signed in to Google, Vercel and
+BigCommerce as the owner. No developer or AI agent has those logins, so these steps can't be
+done in code. Each page says what the job is for, what you need before you start, the exact
+clicks, and how to tell it worked.
+
+<Callout type="warn" title="Never paste a secret anywhere but the place the step names">
+Several steps hand you a password-like value (a JSON key file, an API token). Paste it only
+into the screen the step tells you to. Don't email it, put it in a chat, or commit it to
+GitHub. If one leaks, delete it where it was created and make a new one.
+</Callout>
+
+## Where things stand (checked 6 October 2026)
+
+| Job | State | Page |
+|---|---|---|
+| Give the fundraising site its own Vercel project | **Do first.** The code split merged today (josemadridsalsa #563), but `fundraising.josemadrid.net` still points at the main project, which now shows the main site's home page there | [Move the fundraising site](/docs/owner-runbook/fundraising-site-move) |
+| Replace the Google Analytics key | Open. The admin analytics page shows "Google rejected the saved Google Analytics credential" (PR #551 made that message visible) | [Google Analytics service account](/docs/owner-runbook/google-analytics-service-account) |
+| Verify `fundraising.josemadrid.net` in Search Console | Open. Do it after the fundraising move | [Search Console for the fundraising site](/docs/owner-runbook/search-console-fundraising) |
+| Place a BigCommerce test order and refund it | Open. BigCommerce checkout is switched on in production | [BigCommerce test order](/docs/owner-runbook/bigcommerce-test-order) |
+| Connect purchase trackers inside BigCommerce | Open. Purchases aren't recorded by any tracker today | [Connect trackers in BigCommerce](/docs/owner-runbook/bigcommerce-trackers) |
+| Launch the site as josemadridsalsa.com | Partly done. The domain already reaches the new site; the site still calls itself josemadrid.net | [Launch on josemadridsalsa.com](/docs/owner-runbook/launch-josemadridsalsa-com) |
+
+"Checked" means read from Vercel's project settings and DNS on that date. Things you change
+after that date won't be reflected here, so tick each page's checks as you go.
+
+## Suggested order
+
+<Steps>
+<Step>
+**Move the fundraising site** today. Until it's done, fundraiser links don't open fundraiser
+pages.
+</Step>
+<Step>
+**Replace the Google Analytics key.** It's independent of everything else and takes about
+15 minutes.
+</Step>
+<Step>
+**Place the BigCommerce test order and refund it.** It proves checkout works before you put
+the new domain in front of more shoppers.
+</Step>
+<Step>
+**Connect the trackers in BigCommerce**, so purchases count from launch day.
+</Step>
+<Step>
+**Finish the josemadridsalsa.com launch.**
+</Step>
+<Step>
+**Search Console for the fundraising site.** Any time after step 1.
+</Step>
+</Steps>
+
+## Accounts you'll need
+
+- **Vercel**, on the team that owns the `josemadridsalsa` project.
+- **Google**, the account that owns the Google Analytics property and the Search Console
+  properties. Use the same one throughout; Search Console verification is tied to it.
+- **Google Cloud console** (console.cloud.google.com), same Google account.
+- **BigCommerce**, store owner login for the main store (josemadridsalsa.com).
+- **Website admin** (`/admin`) with an Admin role.
+
+## Background reading
+
+The developer version of the launch plan, with the reasoning behind each step, is the
+**BigCommerce Cutover Runbook** in the app repository
+(`apps/docs/content/docs/deployment/bigcommerce-cutover.mdx`). These pages follow it and add the
+current state and the checks.
