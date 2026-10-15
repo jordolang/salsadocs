@@ -1,0 +1,111 @@
+---
+title: Configuration
+description: Every setting the fundraiser app, its native build and its storefront API read, and where to set each one
+---
+
+# Configuration
+
+The app has very little configuration of its own. Settings fall into three places: values read
+by the JavaScript at run time, values read while the native project is generated, and settings
+on the storefront that the app depends on.
+
+<Callout type="warn" title="No secrets in the app">
+Nothing secret is built into the app. The Square application id is an identifier, not a secret,
+and the Square access token reaches the phone only at run time from the storefront. Never add a
+token, key or password to `app.json`, `eas.json`, the plugin or any `EXPO_PUBLIC_` variable:
+everything there ships inside the app for anyone to read.
+</Callout>
+
+## App settings (JavaScript)
+
+| Setting | Default | Read in | What it does |
+|---|---|---|---|
+| `EXPO_PUBLIC_API_URL` | unset | `src/lib/config.ts` | The storefront the app talks to. Wins over `extra.apiUrl`. Use it to point a development build at a local storefront, e.g. `http://192.168.1.20:3000` |
+| `extra.apiUrl` in `app.json` | `https://www.josemadridsalsa.com` | `src/lib/config.ts` via `expo-constants` | The address store builds use |
+| Built-in fallback | `https://www.josemadridsalsa.com` | `src/lib/config.ts` | Used only if both of the above are missing |
+| `RELOCK_AFTER_MS` | 2 minutes | `src/lib/config.ts` (a constant) | How long the app may sit in the background before asking for the PIN again |
+
+`API_URL` is the base for every API call (`${API_URL}/api/fundraiser-app/...`) and for product
+photos, which the server sends as site paths such as `/images/...`; `imageUrl()` turns them into
+full addresses.
+
+`EXPO_PUBLIC_` variables are inlined into the JavaScript bundle when Metro builds it, so changing
+one needs a Metro restart (`npx expo start --clear`) locally, or a new build or update for an
+installed app.
+
+## Build settings (native)
+
+These are read when `expo prebuild` generates `ios/` and `android/`, which happens on every
+`npx expo run:*` and every EAS build.
+
+| Setting | Where | Value | Notes |
+|---|---|---|---|
+| Square application id | `app.json` › Square plugin › `applicationId` | The shop's production Square app id | Overridden by `SQUARE_APPLICATION_ID` in the build environment. See [sandbox builds](/docs/apps/fundraiser-app/square-sdk#sandbox-builds) |
+| `SQUARE_APPLICATION_ID` | Shell environment or EAS build profile | unset | Build-time override of the application id, e.g. a Square sandbox app id for a test build |
+| `tapToPayOnIPhone` | `app.json` › Square plugin | `true` | Adds Apple's Tap to Pay entitlement. Set `false` until Apple has granted it to the team, or iOS builds fail to sign |
+| Android SDK levels | `app.json` › `expo-build-properties` | `minSdkVersion` 28, `compileSdkVersion` 36 | What Square's SDK requires |
+| Bundle id / package | `app.json` › `ios.bundleIdentifier`, `android.package` | `net.josemadrid.fundraiser` | Must match the App Store Connect and Play Console records |
+| URL scheme | `app.json` › `scheme` | `jmsfundraiser` | Deep links into the app |
+| Version | `app.json` › `version` | `1.0.0` | Bump for each store release. Build numbers are managed by EAS (`appVersionSource: remote`, `autoIncrement` on `production`) |
+| Secure store backup | `app.json` › `expo-secure-store` | `configureAndroidBackup: false` | With `android.allowBackup: false`, keeps the device token out of Android backups |
+
+### Setting build-time variables
+
+<Tabs items={['Local build', 'EAS build']}>
+  <Tab value="Local build">
+    Put the variable in front of the command, or in `apps/fundraiser-app/.env.local`, which Expo
+    CLI loads automatically and git ignores:
+
+    ```bash
+    SQUARE_APPLICATION_ID=sandbox-sq0idb-xxxx npx expo run:ios
+    ```
+
+    The native project keeps whatever value it was generated with, so run
+    `npx expo prebuild --clean` (or delete `ios/` / `android/`) after changing a build-time value.
+  </Tab>
+  <Tab value="EAS build">
+    EAS uploads the project without gitignored files, so `.env.local` does **not** reach the
+    build server. Add the value to the profile in `eas.json`:
+
+    ```json
+    {
+      "build": {
+        "preview": {
+          "distribution": "internal",
+          "env": {
+            "SQUARE_APPLICATION_ID": "sandbox-sq0idb-xxxx",
+            "EXPO_PUBLIC_API_URL": "https://<a storefront connected to the Square sandbox>"
+          }
+        }
+      }
+    }
+    ```
+
+    or create it as an EAS environment variable in the Expo dashboard.
+  </Tab>
+</Tabs>
+
+## Server settings the app depends on
+
+The app needs a storefront that serves `/api/fundraiser-app/*`. These storefront settings
+decide what the app can do. They live in the storefront's `.env.local` locally and in the
+storefront's Vercel project in production.
+
+| Setting | Where | Needed for |
+|---|---|---|
+| `DATABASE_URL`, `NEXTAUTH_SECRET`, `MASTER_KEY` and the rest of the storefront basics | Storefront environment | Anything at all (see the storefront environment variable reference) |
+| The app turned on, with a group PIN | Admin › Fundraisers › campaign › **Mobile App** | Joining a group. Turning it on issues the group ID |
+| The campaign's store active and not ended | Admin › Fundraisers › campaign | Taking orders |
+| **Card payments with Square** on for the group | Admin › Fundraisers › campaign › **Mobile App** | The Card option and `/square/authorization` |
+| Square connected | Admin › Settings › Payments › **Connect Square** (OAuth) | The token the phone signs the SDK in with. The same connection the iPad kiosk uses |
+| `SQUARE_APPLICATION_ID`, `SQUARE_APPLICATION_SECRET` | Storefront environment | Connecting Square with OAuth |
+| `SQUARE_ACCESS_TOKEN` | Storefront environment | The storefront's own look-ups of card payments |
+| `SQUARE_LOCATION_ID` | Storefront environment | Where the money lands, and the location every payment is checked against. Without it the app is told card payments are not set up |
+| `SQUARE_SANDBOX` | Storefront environment | Square's sandbox is used **unless this is `false`**. Production must set `SQUARE_SANDBOX=false` |
+
+<Callout type="info" title="The app and the storefront must agree on Square">
+The application id built into the app and the Square account the storefront is connected to
+must be in the same Square environment. A production app build against a storefront using the
+sandbox (or the other way round) fails when the SDK signs in. Match them as described under
+[sandbox builds](/docs/apps/fundraiser-app/square-sdk#sandbox-builds).
+</Callout>

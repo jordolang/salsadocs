@@ -1,0 +1,130 @@
+---
+title: Square SDK
+description: How Square's Mobile Payments SDK is added to the fundraiser app, what the config plugin changes, and how to build against the Square sandbox
+---
+
+# Square SDK
+
+Card payments use Square's **Mobile Payments SDK** through its React Native package,
+`mobile-payments-sdk-react-native` (pinned to `2026.8.1` in `package.json`). It gives the app
+three ways to take a card: **Tap to Pay** on the seller's iPhone or Android phone, a card number
+**keyed in** for an order taken over the phone, and a paired **Square Reader**.
+
+The SDK is native code (an iOS framework installed with CocoaPods and an Android library from
+Square's Maven repository). That is why the app cannot run in Expo Go, and why it needs extra
+native setup that Expo does not do by itself. A local config plugin does that setup every time
+the native projects are generated.
+
+## The config plugin
+
+`plugins/with-square-mobile-payments.js` is registered last in `app.json`'s `plugins`:
+
+```json
+[
+  "./plugins/with-square-mobile-payments",
+  {
+    "applicationId": "sq0idp-…",
+    "tapToPayOnIPhone": true
+  }
+]
+```
+
+It is adapted from Square's own Expo sample (`example-expo/app.plugin.js` in
+`square/mobile-payments-sdk-react-native`), with two deliberate differences: no access token or
+location is baked into the app, and Tap to Pay on iPhone is switched on through Apple's
+entitlement. It throws at prebuild time if no application id is available.
+
+### What it changes on iOS
+
+| Change | Why |
+|---|---|
+| `SquareApplicationID` in `Info.plist` | The SDK is initialized with it at launch |
+| `UISupportedExternalAccessoryProtocols`: `com.squareup.protocol.stand`, `com.squareup.s089`, `com.squareup.s025`, `com.squareup.s020` | Square Readers and stands that connect through the Lightning or dock connector |
+| Usage strings for Bluetooth, location (when in use, always and when in use) and microphone | Readers connect over Bluetooth; Square only takes US payments so it checks location; the microphone is for magstripe readers. Existing strings are kept |
+| `com.apple.developer.proximity-reader.payment.acceptance` entitlement (when `tapToPayOnIPhone` is not `false`) | Tap to Pay on iPhone |
+| `import SquareMobilePaymentsSDK` and `MobilePaymentsSDK.initialize(...)` in `AppDelegate.swift`'s `didFinishLaunchingWithOptions` | Starts the SDK. The plugin requires a Swift `AppDelegate` (Expo SDK 53 and newer) and fails loudly if the template ever changes shape |
+| A `[SquareMobilePaymentsSDK] setup` build phase, added from the Podfile's `post_integrate` hook and placed right after `[CP] Embed Pods Frameworks` | Square's framework ships a setup script that must run after CocoaPods embeds the frameworks. Run any earlier, it breaks the embed step (see [iOS troubleshooting](/docs/apps/fundraiser-app/ios#troubleshooting)) |
+
+### What it changes on Android
+
+| Change | Why |
+|---|---|
+| `maven { url("https://sdk.squareup.com/public/android/") }` in the project `build.gradle` | Where Square publishes the Android SDK |
+| `-Xskip-metadata-version-check` for every Kotlin compile task | Square's SDK is built with a newer Kotlin than React Native's Gradle plugin uses. Remove once the versions line up |
+| `MobilePaymentsSdk.initialize("<application id>", this)` in `MainApplication.kt`'s `onCreate` | Starts the SDK |
+| Permissions: `ACCESS_FINE_LOCATION`, `RECORD_AUDIO`, `BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN`, `READ_PHONE_STATE`, `NFC` | Location for US-only payments, readers, and NFC for Tap to Pay |
+| `android.packagingOptions.pickFirsts=META-INF/versions/9/OSGI-INF/MANIFEST.MF` in `gradle.properties` | Two of Square's dependencies ship the same file |
+
+`expo-build-properties` in `app.json` sets `minSdkVersion` 28 and `compileSdkVersion` 36, which
+the SDK needs. Release minification stays off (Expo's default), as Square requires.
+
+Every change is idempotent: running prebuild again over an existing project does not add things
+twice. Still, the source of truth is the plugin. Never fix a native problem by editing `ios/` or
+`android/` by hand, because the next `prebuild --clean` or EAS build throws the edit away.
+
+## How the app uses it
+
+All SDK calls are in `src/lib/square.ts`; screens never import the SDK directly. The flow
+(sign in with a storefront-issued token, link Tap to Pay, `startPayment`, then let the
+storefront confirm with Square) is described under
+[A card sale, end to end](/docs/apps/fundraiser-app/architecture#a-card-sale-end-to-end).
+
+Two rules keep it safe to change:
+
+- **Load it lazily.** The module is `require`d inside `sdk()`, and `cardPaymentsAvailable`
+  checks `NativeModules.MobilePaymentsSdkReactNative` first. A static `import` of the SDK crashes
+  any build that lacks the native module.
+- **Trust Square, not the phone.** The phone only reports a payment id. Whether the order is
+  paid is decided by the storefront after it looks the payment up in Square.
+
+## Application id and environments
+
+The application id identifies the app to Square; it is not a secret. `app.json` carries the
+shop's **production** id. Square has separate production and **sandbox** environments, and the
+app id, the OAuth token and the location must all come from the same one.
+
+| | App build | Storefront |
+|---|---|---|
+| Production | The id in `app.json` (no override) | `SQUARE_SANDBOX=false`, Square connected in production, production `SQUARE_LOCATION_ID` |
+| Sandbox | `SQUARE_APPLICATION_ID=<sandbox app id>` at build time | `SQUARE_SANDBOX` unset or `true`, Square connected through the sandbox, sandbox `SQUARE_LOCATION_ID` |
+
+### Sandbox builds
+
+To test card payments without moving real money:
+
+1. In the Square Developer Dashboard, open the application's **Sandbox** credentials and note the
+   sandbox application id (it starts `sandbox-sq0idb-`) and a sandbox location id.
+2. Run a storefront against the sandbox: leave `SQUARE_SANDBOX` unset, set the sandbox
+   `SQUARE_APPLICATION_ID`, `SQUARE_APPLICATION_SECRET`, `SQUARE_ACCESS_TOKEN` and
+   `SQUARE_LOCATION_ID`, then use **Admin › Settings › Payments › Connect Square**.
+3. Build the app with the sandbox id and that storefront's address:
+
+   ```bash
+   export SQUARE_APPLICATION_ID=sandbox-sq0idb-xxxx
+   export EXPO_PUBLIC_API_URL=http://192.168.1.20:3000
+   npx expo prebuild --clean
+   npx expo run:ios   # or run:android
+   ```
+
+   For an EAS build, put both values in the build profile's `env` (see
+   [Configuration](/docs/apps/fundraiser-app/configuration#setting-build-time-variables)).
+4. Turn on **Card payments with Square** for a test group on that storefront.
+
+Never ship a sandbox build to the stores.
+
+## Tap to Pay requirements
+
+| Platform | What is needed |
+|---|---|
+| iPhone | Apple must grant the **Tap to Pay on iPhone** entitlement to the Apple Developer team (request it at developer.apple.com). Until then, builds with the entitlement fail to sign, so set `"tapToPayOnIPhone": false` on the plugin; keyed entry and readers still work. An iPhone XS or newer. The first time, someone at Jose Madrid accepts Apple's Tap to Pay terms, which `TapToPaySettings.linkAppleAccount()` shows |
+| Android | An NFC phone on a recent Android that passes Google's security checks. Nothing to request |
+
+## Upgrading the SDK
+
+1. Read Square's release notes for `mobile-payments-sdk-react-native` and compare its Expo
+   sample's `app.plugin.js` with ours. New permissions, Gradle settings or build phases go into
+   `plugins/with-square-mobile-payments.js`.
+2. Change the version in `package.json` (it is pinned exactly), then `npm install`.
+3. Run `npx expo prebuild --clean` and build both platforms on a real device.
+4. Take a sandbox payment each way you support: Tap to Pay, keyed, and a reader if you have one.
+5. Check whether the Kotlin `-Xskip-metadata-version-check` workaround is still needed.
