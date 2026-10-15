@@ -141,12 +141,9 @@ The shipping calculator falls back to estimate rates when the carrier API fails.
 
 ### Free Shipping Not Applying
 
-The free shipping threshold is read from the database first, then falls back to $50. To check the current threshold:
+This is expected: the storefront has no free-shipping threshold and no `FREE_SHIPPING` discount type, so every checkout quote includes shipping plus the $4.00 packaging fee. The `freeShippingThreshold` column no longer exists. Free shipping is only offered on fundraiser orders of 96 jars or more and on freight negotiated individually with distributor/wholesale accounts — neither is applied by the shipping calculator.
 
-```sql
-SELECT "freeShippingThreshold" FROM "shipping_settings"
-WHERE singleton = 'singleton';
-```
+If a storefront order shows **$0.00** shipping, that is a bug, not a promotion. Check server logs for `[Shipping Calculator]` errors.
 
 ## Email Issues
 

@@ -4,6 +4,9 @@ import { remarkMdxMermaid } from "fumadocs-core/mdx-plugins";
 var docs = defineDocs({
   dir: "content/docs"
 });
+var help = defineDocs({
+  dir: "content/help"
+});
 var source_config_default = defineConfig({
   mdxOptions: {
     remarkPlugins: [remarkMdxMermaid]
@@ -11,5 +14,6 @@ var source_config_default = defineConfig({
 });
 export {
   source_config_default as default,
-  docs
+  docs,
+  help
 };
