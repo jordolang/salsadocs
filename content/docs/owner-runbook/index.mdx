@@ -16,27 +16,24 @@ into the screen the step tells you to. Don't email it, put it in a chat, or comm
 GitHub. If one leaks, delete it where it was created and make a new one.
 </Callout>
 
-## Where things stand (checked 6 October 2026)
+## Where things stand (checked 12 October 2026)
 
 | Job | State | Page |
 |---|---|---|
-| Give the fundraising site its own Vercel project | **Do first.** The code split merged today (josemadridsalsa #563), but `fundraising.josemadrid.net` still points at the main project, which now shows the main site's home page there | [Move the fundraising site](/docs/owner-runbook/fundraising-site-move) |
-| Replace the Google Analytics key | Open. The admin analytics page shows "Google rejected the saved Google Analytics credential" (PR #551 made that message visible) | [Google Analytics service account](/docs/owner-runbook/google-analytics-service-account) |
-| Verify `fundraising.josemadrid.net` in Search Console | Open. Do it after the fundraising move | [Search Console for the fundraising site](/docs/owner-runbook/search-console-fundraising) |
-| Place a BigCommerce test order and refund it | Open. BigCommerce checkout is switched on in production | [BigCommerce test order](/docs/owner-runbook/bigcommerce-test-order) |
-| Connect purchase trackers inside BigCommerce | Open. Purchases aren't recorded by any tracker today | [Connect trackers in BigCommerce](/docs/owner-runbook/bigcommerce-trackers) |
-| Launch the site as josemadridsalsa.com | Partly done. The domain already reaches the new site; the site still calls itself josemadrid.net | [Launch on josemadridsalsa.com](/docs/owner-runbook/launch-josemadridsalsa-com) |
+| Give the fundraising site its own Vercel project | ✅ Done. `fundraising.josemadridsalsa.com` is on the `josemadridsalsa-fundraising` project and its latest production deployment is Ready; `fundraising.josemadrid.net` redirects there | [Move the fundraising site](/docs/owner-runbook/fundraising-site-move) |
+| Replace the Google Analytics key | Not re-checked since 6 October, when the admin analytics page showed "Google rejected the saved Google Analytics credential" (PR #551 made that message visible) | [Google Analytics service account](/docs/owner-runbook/google-analytics-service-account) |
+| Verify `fundraising.josemadridsalsa.com` in Search Console | Open. The fundraising move is done, so this can be done now | [Search Console for the fundraising site](/docs/owner-runbook/search-console-fundraising) |
+| Place a BigCommerce test order and refund it | Not re-checked. BigCommerce checkout is switched on in production | [BigCommerce test order](/docs/owner-runbook/bigcommerce-test-order) |
+| Connect purchase trackers inside BigCommerce | Not re-checked. On 6 October no tracker recorded purchases | [Connect trackers in BigCommerce](/docs/owner-runbook/bigcommerce-trackers) |
+| Launch the site as josemadridsalsa.com | Mostly done. The site calls itself www.josemadridsalsa.com and josemadrid.net redirects to it (josemadridsalsa #577, 7 October). Left: webhooks and sign-in callbacks, BigCommerce on `shop.`, Search Console | [Launch on josemadridsalsa.com](/docs/owner-runbook/launch-josemadridsalsa-com) |
 
-"Checked" means read from Vercel's project settings and DNS on that date. Things you change
-after that date won't be reflected here, so tick each page's checks as you go.
+"Checked" means read from Vercel's project settings on that date. Settings that live in other
+dashboards (Google, BigCommerce, Stripe and so on) can't be read from here, so tick each page's
+checks as you go.
 
 ## Suggested order
 
 <Steps>
-<Step>
-**Move the fundraising site** today. Until it's done, fundraiser links don't open fundraiser
-pages.
-</Step>
 <Step>
 **Replace the Google Analytics key.** It's independent of everything else and takes about
 15 minutes.
@@ -52,7 +49,7 @@ the new domain in front of more shoppers.
 **Finish the josemadridsalsa.com launch.**
 </Step>
 <Step>
-**Search Console for the fundraising site.** Any time after step 1.
+**Search Console for the fundraising site.** Any time.
 </Step>
 </Steps>
 
