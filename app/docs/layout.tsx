@@ -87,6 +87,10 @@ export default function Layout({ children }: { children: ReactNode }) {
         }}
         links={[
           {
+            text: 'Customer Help',
+            url: '/help',
+          },
+          {
             text: 'Main Site',
             url: 'https://www.josemadrid.net',
             external: true,

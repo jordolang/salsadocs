@@ -33,8 +33,13 @@ The shipping system calculates real-time rates from carrier APIs (EasyPost or Sh
 
 1. **Never block checkout** - All errors fall back to estimate rates
 2. **Server-side truth** - Shipping cost is always recalculated server-side; client values are never trusted
-3. **Configurable** - Free shipping threshold and origin address are managed from the admin panel
-4. **PO Box aware** - Automatically filters to USPS-only options for PO Box addresses
+3. **No free-shipping threshold** - Shipping (plus a $4.00 packaging fee) is charged on every storefront order, regardless of subtotal
+4. **Configurable** - Origin address, enabled carriers, and flat-rate presets are managed from the admin panel
+5. **PO Box aware** - Automatically filters to USPS-only options for PO Box addresses
+
+<Callout type="info">
+The only free shipping the business offers is on fundraiser orders of 96 jars or more and on freight negotiated individually with distributor/wholesale accounts. Neither is applied by the storefront shipping calculator.
+</Callout>
 
 ---
 
@@ -60,9 +65,9 @@ Checkout Page                     Server
     |                    +----------+-----------+
     |                    |  calculateShipping() |
     |                    |                      |
-    |                    |  1. Free threshold?  |
-    |                    |  2. Carrier API call |
-    |                    |  3. Fallback rates   |
+    |                    |  1. Carrier API call |
+    |                    |  2. Fallback rates   |
+    |                    |  3. + packaging fee  |
     |                    +----------+-----------+
     |                               |
     |  { availableOptions, cost }   |
@@ -102,12 +107,7 @@ The `SHIPPING_ORIGIN_*` environment variables serve as defaults. The admin setti
 
 ### Configurable Fields
 
-#### Free Shipping Threshold
-- Numeric dollar amount (e.g., `75.00`)
-- Orders at or above this amount receive free shipping
-- Leave blank to disable free shipping
-- Stored in the `ShippingSettings` table (singleton row)
-- Default fallback: `$50.00` (hardcoded in `SHIPPING_RATES.FREE_SHIPPING_THRESHOLD`)
+There is no free-shipping threshold setting. The `freeShippingThreshold` column was dropped from `ShippingSettings` (migration `20260810100000_remove_free_shipping`).
 
 #### Origin Address
 - Street address, city, state, ZIP code, country
@@ -127,7 +127,6 @@ The `SHIPPING_ORIGIN_*` environment variables serve as defaults. The admin setti
 ### Status Dashboard
 
 The admin page displays current configuration status with badges:
-- **Free shipping:** Active (with threshold) or Disabled
 - **Origin address:** Configured (with address preview) or Required
 - **Carriers:** Active (count + names) or Warning (none enabled)
 
@@ -182,7 +181,7 @@ The main entry point for all shipping calculations. Called by both the checkout 
 
 ### Step-by-Step Flow
 
-1. **Free shipping check** - Fetch threshold from DB (`ShippingSettings` singleton); if subtotal >= threshold, return `$0.00` immediately
+1. **Origin resolution** - Read the warehouse address from `ShippingSettings`, then `SHIPPING_ORIGIN_*`; an incomplete address falls through to estimates rather than quoting from a placeholder
 2. **International check** - Non-US addresses use estimate-based rates (carrier API not yet supported for international)
 3. **Parcel dimensions** - Aggregate item weights and dimensions:
    - Weight: sum of `(item weight * quantity)`, converted to ounces (1 lb = 16 oz); default 1 lb per item
@@ -190,7 +189,7 @@ The main entry point for all shipping calculations. Called by both the checkout 
    - Height: sum of item heights * quantities, capped at 24"; default 2" per item
 4. **Carrier API call** - Build `ShipmentRequest` with origin address and destination, call `getShippingRates()`
 5. **PO Box filter** - If destination is a PO Box, filter to USPS-only rates
-6. **Sort and return** - Sort rates by cost (cheapest first), return all as `availableOptions`
+6. **Sort and return** - Sort rates by cost (cheapest first), return the cheapest as the single entry in `availableOptions`
 7. **Fallback** - On any error, return estimate-based rates with `fallback: true` flag
 
 ### Estimate-Based Rates (Fallback)
@@ -199,11 +198,11 @@ Used when the carrier API is unavailable or returns no rates.
 
 | Condition | Rate |
 |-----------|------|
-| Subtotal >= free shipping threshold | $0.00 (Free Shipping) |
 | International (non-US) | $24.99 |
 | Standard domestic (flat rate) | $6.99 |
 | Weight > 5 lbs | $4.99 base + $0.50/lb over 5 lbs |
-| Express shipping | $14.99 |
+
+All rates above are carriage only. A flat **$4.00 packaging-and-materials fee** (`lib/shipping/handling-fee.ts`) is added once per order to every quote the calculator returns — live carrier rates included — so the domestic flat rate reaches the customer as $10.99 and the international rate as $28.99.
 
 #### State Multipliers
 
@@ -215,22 +214,19 @@ Remote states have a cost multiplier applied:
 | Hawaii (HI) | 1.5x |
 | Puerto Rico (PR) | 2.0x |
 
-#### PO Box Estimate Options
+#### PO Box Estimate Option
 
-When the destination is a PO Box, only USPS options are offered:
+When the destination is a PO Box, the single option is USPS-only:
 
 | Service | Rate |
 |---------|------|
 | USPS Ground Advantage | base rate |
-| USPS Priority Mail | base rate x 1.5 |
-| USPS Priority Mail Express | express rate |
 
-#### Non-PO-Box Estimate Options
+#### Non-PO-Box Estimate Option
 
 | Service | Rate |
 |---------|------|
 | Standard Shipping | base rate |
-| Express Shipping | express rate |
 
 ---
 
@@ -242,8 +238,9 @@ The system has multiple fallback layers to ensure checkout is never blocked:
 2. **Carrier API returns no rates** - Use estimate-based rates with `fallback: true`
 3. **Carrier API errors** - Log error, use estimate-based rates with `fallback: true`
 4. **API key missing** - `getShippingClient()` throws; caught by `getShippingRates()`, returns empty rates; calculator falls back to estimates
-5. **Calculate-shipping endpoint fails entirely** - Returns HTTP 200 with flat-rate estimate ($6.99) rather than HTTP 500
-6. **Free shipping threshold DB fetch fails** - Falls back to hardcoded `$50.00` threshold
+5. **Calculate-shipping endpoint fails entirely** - Returns HTTP 200 with the flat-rate estimate plus the packaging fee ($10.99) rather than HTTP 500
+6. **Origin address missing or incomplete** - Falls back to flat-rate estimates and logs which fields are absent
+7. **Rate-config DB read fails** - `getShippingRateConfig()` falls back to the built-in default presets
 
 ---
 
@@ -263,7 +260,7 @@ The following patterns (case-insensitive, periods removed) trigger PO Box detect
 ### Behavior When PO Box Detected
 
 - **Carrier API mode:** Filters rates to USPS-only (UPS and FedEx cannot deliver to PO Boxes)
-- **Fallback mode:** Returns USPS Ground Advantage, Priority Mail, and Priority Mail Express options only
+- **Fallback mode:** Returns the USPS Ground Advantage option only
 - If no USPS rates are available from the carrier API, falls back to estimate rates
 
 ---

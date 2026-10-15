@@ -65,7 +65,7 @@ After shipping is determined, the page calls `POST /api/checkout/calculate-tax` 
 
 ### Discount Code (Optional)
 
-Users can enter a discount code, validated via `POST /api/checkout/validate-discount`. Supported types: `PERCENTAGE`, `FIXED_AMOUNT`, and `FREE_SHIPPING`.
+Users can enter a discount code, validated via `POST /api/checkout/validate-discount`. Supported types: `PERCENTAGE` and `FIXED_AMOUNT`. There is no `FREE_SHIPPING` discount type — it was removed from the `DiscountType` enum because storefront orders are always charged shipping.
 
 ### Gift Certificate (Optional)
 

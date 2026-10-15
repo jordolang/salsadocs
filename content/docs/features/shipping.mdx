@@ -1,11 +1,15 @@
 ---
 title: Shipping
-description: Shipping calculation with real carrier API rates, fallback estimates, PO Box detection, free shipping thresholds, and address validation
+description: Shipping calculation with real carrier API rates, fallback estimates, a per-order packaging fee, PO Box detection, and address validation
 ---
 
 # Shipping
 
-Shipping costs are calculated using real carrier API rates with automatic fallback to estimate-based rates. The system supports free shipping thresholds, PO Box detection, weight-based pricing, and state-specific multipliers.
+Shipping costs are calculated using real carrier API rates with automatic fallback to estimate-based rates. The system supports PO Box detection, weight-based pricing, state-specific multipliers, and a flat per-order packaging fee.
+
+<Callout type="warn" title="No free-shipping threshold">
+Shipping is charged on every storefront order, regardless of subtotal. The old `freeShippingThreshold` (which defaulted to $50) and the `FREE_SHIPPING` discount type have both been removed from the code and database. The only free shipping the business offers is on **fundraiser orders of 96 jars or more** and on **freight negotiated individually with distributor/wholesale accounts** — neither is applied by `calculateShipping()`.
+</Callout>
 
 ## Architecture
 
@@ -13,6 +17,11 @@ Shipping costs are calculated using real carrier API rates with automatic fallba
   <Folder name="lib" defaultOpen>
     <File name="shipping-calculator.ts" />
     <File name="shipping-api.ts" />
+    <Folder name="shipping">
+      <File name="rate-config.ts" />
+      <File name="handling-fee.ts" />
+      <File name="origin.ts" />
+    </Folder>
   </Folder>
   <Folder name="app/api/checkout">
     <Folder name="calculate-shipping">
@@ -27,29 +36,22 @@ Shipping costs are calculated using real carrier API rates with automatic fallba
 ## Calculation Strategy
 
 <Steps>
-### Free Shipping Check
+### Rate Config and Origin
 
-The system first checks if the order subtotal meets the free shipping threshold. The threshold is configurable in the database via `ShippingSettings` and defaults to $50.
-
-```ts
-const freeShippingThreshold = await getFreeShippingThreshold()
-if (subtotal >= freeShippingThreshold) {
-  return { shippingCost: 0, shippingMethod: 'Free Shipping', ... }
-}
-```
+The admin-configurable flat-rate presets are loaded with `getShippingRateConfig()` (never throws; falls back to built-in defaults). The warehouse origin is resolved with `getShippingOrigin()` — if it is incomplete, the quote goes straight to flat-rate estimates rather than pricing from a placeholder address.
 
 ### International Routing
 
-Non-US orders fall back to flat-rate estimates ($24.99, 7-14 business days). Real international carrier API support is planned.
+Non-US orders fall back to flat-rate estimates ($24.99 carriage, $28.99 to the customer once the packaging fee is added; 7-14 business days). Real international carrier API support is planned.
 
 ### Carrier API Call
 
 For domestic orders, the system:
-1. Computes parcel dimensions from item weights and sizes
+1. Computes the parcel (jar-only orders pack on the warehouse grid; other items use a volume fit)
 2. Builds a `ShipmentRequest` with origin and destination addresses
 3. Calls `getShippingRates()` from `lib/shipping-api.ts`
 4. Sorts returned rates by cost (cheapest first)
-5. Returns all options with the cheapest as default
+5. Returns the cheapest rate as the single standard shipping option
 
 ### PO Box Filtering
 
@@ -58,34 +60,38 @@ If the destination is a PO Box (detected by regex patterns), only USPS rates are
 ### Fallback Estimates
 
 If the carrier API fails or returns no rates, the system falls back to estimate-based rates with a `fallback: true` flag. Checkout is never blocked by shipping calculation failures.
+
+### Packaging Fee
+
+A flat **$4.00 packaging-and-materials fee** (`HANDLING_FEE_CENTS = 400` in `lib/shipping/handling-fee.ts`) is added once per order to whichever rate the steps above produced — live carrier rate, domestic estimate, or international flat rate. It is not scaled by the state multiplier or weight surcharge, and it is not admin-configurable.
 </Steps>
 
 ## Rate Configuration
 
-Default rates (used for fallback calculations):
+The flat-rate presets used for the estimate/fallback path are stored on the `ShippingSettings` singleton (in whole cents) and read by `lib/shipping/rate-config.ts`. Every field is optional and falls back to the built-in default below. Live carrier rates, when available, are used ahead of these presets.
 
-| Method | Cost | Delivery |
-| --- | --- | --- |
-| Standard | $6.99 | 3-5 business days |
-| Express | $14.99 | 1-2 business days |
-| International | $24.99 | 7-14 business days |
-| Free | $0.00 | Orders over threshold |
+Built-in defaults (before the $4.00 packaging fee):
+
+| Method | Cost | Customer pays | Delivery |
+| --- | --- | --- | --- |
+| Standard | $6.99 | $10.99 | 3-5 business days |
+| International | $24.99 | $28.99 | 7-14 business days |
 
 ### Weight-Based Pricing
 
-For orders over 5 lbs, shipping switches from flat-rate to weight-based:
+For orders over the threshold weight (default 5 lb), shipping switches from flat-rate to weight-based when that is higher:
 
 ```ts
 baseCost = Math.max(
-  FLAT_RATE.cost,
-  WEIGHT_BASED.baseRate + (totalWeight - 5) * WEIGHT_BASED.perPound
+  flatRate,
+  weightSurchargeBase + (totalPounds - thresholdLb) * weightSurchargePerLb
 )
-// baseRate: $4.99, perPound: $0.50
+// defaults: flatRate $6.99, base $4.99, perPound $0.50, threshold 5 lb
 ```
 
 ### State Multipliers
 
-Remote locations have higher shipping costs:
+Remote locations have higher shipping costs (configurable; defaults below):
 
 | State | Multiplier |
 | --- | --- |
@@ -117,8 +123,8 @@ The `validateShippingAddress()` function checks:
 
 ## Frontend Preview
 
-The `getShippingEstimate()` function provides a quick estimate for the cart page without detailed item info, based only on subtotal, state, and country.
+The `getShippingEstimate()` function provides a quick estimate for the cart page without detailed item info, based only on state and country (flat rate × state multiplier, plus the packaging fee).
 
 <Callout type="info">
-The free shipping threshold is stored in the `ShippingSettings` singleton table and can be updated from the admin panel without code changes.
+The flat-rate presets, warehouse origin address, and enabled carriers are stored in the `ShippingSettings` singleton table and can be updated from the admin panel without code changes. There is no free-shipping setting.
 </Callout>
