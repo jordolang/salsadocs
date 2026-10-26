@@ -5,7 +5,7 @@ Jose Madrid Salsa platform. It records what the platform is made of today, what 
 already cover, what is stale or missing, and the outline every new page will fit into.
 
 Surveyed against `jordolang/josemadridsalsa` at commit `12ec8fa` (6 October 2026); inventory,
-domains and known inaccuracies refreshed against `86f75fd` (11 October 2026).
+domains and known inaccuracies refreshed against `609f823` (26 October 2026).
 
 ---
 
@@ -97,10 +97,20 @@ What exists in the monorepo today, and how each piece is built, run and deployed
 
 | | This repo | Monorepo `apps/docs` |
 |---|---|---|
-| MDX pages | 114 mirrored, plus 7 owner-runbook pages written here | 170 |
-| Pages only here | 2 (`integrations/shopify*.mdx`, Shopify is no longer used) | 58 |
-| Shared pages whose text differs | 54 | |
-| Last change | June 2026 | Ongoing, ships with code |
+| MDX pages | 122, plus 7 owner-runbook pages and 9 Help Center pages written here | 177 |
+| Pages only here | 10: `integrations/shopify*.mdx` (Shopify is no longer used), `apps/fundraiser-app/*` (7 pages, salsadocs #18) and `integrations/google-analytics-admin-reporting.mdx` (#17) | 65 |
+| Shared pages whose text differs | 59 | |
+| Last change | October 2026 | Ongoing, ships with code |
+
+**Customer Help Center.** `content/help` (9 articles, salsadocs #19) is written here, and
+josemadridsalsa #663 copied it into `apps/storefront/content/help`, which is what
+www.josemadridsalsa.com/help serves. The two copies were identical on 18 October; any change
+has to be made in both until one is chosen as the source. `apps/docs` has its own, smaller
+`help` section (3 pages) that the storefront no longer reads.
+
+**Written here, at risk from the sync:** the owner runbook, the fundraiser-app guide and the GA
+admin reporting guide exist only in this repo. The phase-1 sync must skip them or copy them into
+`apps/docs` first.
 
 **Missing here entirely** include the BigCommerce cutover runbook, the fundraising site,
 the fundraiser mobile app, kiosks, desktop apps, macOS admin, shared code strategy,
@@ -180,7 +190,7 @@ Quick start, adding a feature, testing, code quality, debugging, versioning, API
    Actions workflow in the monorepo runs on every push to `main` that touches
    `apps/docs/content/**`, copies `content/docs` into this repo with a token scoped to
    it, and commits only when something changed. The first run closes the current gap
-   (58 missing pages, 54 stale ones as of 11 October) and removes the Shopify pages. The admin panel's
+   (65 missing pages, 59 stale ones as of 26 October) and removes the Shopify pages. The admin panel's
    existing per-page publisher (`/admin/developer/salsadocs`, which writes straight to this
    repo through `SALSADOCS_GITHUB_TOKEN`) would be overwritten by the next sync, so it
    should write to `apps/docs` instead, or be retired.

@@ -6,7 +6,7 @@ itself lives in a separate monorepo, [`jordolang/josemadridsalsa`](https://githu
 
 Start here if you want to know what the platform is made of, how the pieces talk to each
 other, and where to go next. Everything below was checked against the monorepo at commit
-`86f75fd` (11 October 2026).
+`609f823` (26 October 2026).
 
 > **Planning in progress.** The full outline for the rest of this documentation, and the
 > list of what is stale or missing today, is in
@@ -98,7 +98,10 @@ customer accounts, cart and checkout, recipes and the Heat Index blog, wholesale
 staff admin panel (`/admin`), the desktop shell (`/admin-desktop`), point of sale
 (`/pos`), kiosk screens (`/kiosk`), about fifty API groups under `app/api`, every
 webhook (`stripe`, `paypal`, `square`, `easypost`, `resend`, BigCommerce) and fourteen
-Vercel cron jobs. It is also the API for the 3D Battle Arena game (`/api/arena/*`: sign-in,
+Vercel cron jobs. Customers get a Help Center at `/help` (articles in
+`apps/storefront/content/help`, searched locally) and order tracking at `/order-tracking` (order
+number and phone, or `/track/<tracking number>`, with a map of the last carrier scan). It is
+also the API for the 3D Battle Arena game (`/api/arena/*`: sign-in,
 player profiles, leaderboards, friends and game codes).
 
 - **Run:** `npm run dev` from the monorepo root → http://localhost:3000
@@ -147,7 +150,10 @@ They also run the packing bench. With an 80mm receipt printer set up, every newl
 from any channel prints an order ticket with its number as a barcode. **Pack & ship** then
 takes a scan of that ticket, a scan of every jar going into the box, and once the order is
 complete buys the cheapest postage, marks it shipped and prints the label and packing slip.
-Labels print on 4×6 label stock or, by default on a new install, on a letter sheet.
+Labels print on 4×6 label stock or, by default on a new install, on a letter sheet. To
+ship in bulk instead, the Orders list (in the browser too) exports any selection, or every
+order ready to ship, as one Pirate Ship import file. Since release 2.2 every desktop table
+sorts by any column with a click on its header.
 
 - **Windows:** Electron 44 + TypeScript, packaged by electron-builder as an NSIS
   installer (`JoseMadridSalsaAdmin-Setup-<version>.exe`). Run with
@@ -198,11 +204,19 @@ between the storefront and fundraising projects automatically.
 
 ## Where the docs live
 
+This repo holds three kinds of pages:
+
+| Folder | Audience | Where it's published |
+|---|---|---|
+| `content/help` | Customers | Copied into the storefront at `apps/storefront/content/help` (josemadridsalsa #663) and served at www.josemadridsalsa.com/help. Change both copies together |
+| `content/docs/owner-runbook` | The owner | Only here |
+| The rest of `content/docs` | Developers and staff | Meant to mirror monorepo `apps/docs` (below) |
+
 There are two copies of the developer documentation today, and they have drifted:
 
 | | This repo (`salsadocs`) | Monorepo `apps/docs` |
 |---|---|---|
-| Pages | 114 (plus the owner runbook) | 170 |
+| Pages | 122 (plus the owner runbook), 8 of them written only here | 177 |
 | Last synced | June 2026 | Current |
 | Covers BigCommerce, fundraising site, mobile app, kiosks, desktop apps | No | Yes |
 
