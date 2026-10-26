@@ -5,7 +5,7 @@ Jose Madrid Salsa platform. It records what the platform is made of today, what 
 already cover, what is stale or missing, and the outline every new page will fit into.
 
 Surveyed against `jordolang/josemadridsalsa` at commit `12ec8fa` (6 October 2026); inventory,
-domains and known inaccuracies refreshed against `3d73b08` (18 October 2026).
+domains and known inaccuracies refreshed against `609f823` (26 October 2026).
 
 ---
 
@@ -97,9 +97,9 @@ What exists in the monorepo today, and how each piece is built, run and deployed
 
 | | This repo | Monorepo `apps/docs` |
 |---|---|---|
-| MDX pages | 122, plus 7 owner-runbook pages and 9 Help Center pages written here | 176 |
-| Pages only here | 10: `integrations/shopify*.mdx` (Shopify is no longer used), `apps/fundraiser-app/*` (7 pages, salsadocs #18) and `integrations/google-analytics-admin-reporting.mdx` (#17) | 64 |
-| Shared pages whose text differs | 58 | |
+| MDX pages | 122, plus 7 owner-runbook pages and 9 Help Center pages written here | 177 |
+| Pages only here | 10: `integrations/shopify*.mdx` (Shopify is no longer used), `apps/fundraiser-app/*` (7 pages, salsadocs #18) and `integrations/google-analytics-admin-reporting.mdx` (#17) | 65 |
+| Shared pages whose text differs | 59 | |
 | Last change | October 2026 | Ongoing, ships with code |
 
 **Customer Help Center.** `content/help` (9 articles, salsadocs #19) is written here, and
@@ -190,7 +190,7 @@ Quick start, adding a feature, testing, code quality, debugging, versioning, API
    Actions workflow in the monorepo runs on every push to `main` that touches
    `apps/docs/content/**`, copies `content/docs` into this repo with a token scoped to
    it, and commits only when something changed. The first run closes the current gap
-   (64 missing pages, 58 stale ones as of 18 October) and removes the Shopify pages. The admin panel's
+   (65 missing pages, 59 stale ones as of 26 October) and removes the Shopify pages. The admin panel's
    existing per-page publisher (`/admin/developer/salsadocs`, which writes straight to this
    repo through `SALSADOCS_GITHUB_TOKEN`) would be overwritten by the next sync, so it
    should write to `apps/docs` instead, or be retired.

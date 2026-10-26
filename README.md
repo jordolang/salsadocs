@@ -6,7 +6,7 @@ itself lives in a separate monorepo, [`jordolang/josemadridsalsa`](https://githu
 
 Start here if you want to know what the platform is made of, how the pieces talk to each
 other, and where to go next. Everything below was checked against the monorepo at commit
-`3d73b08` (18 October 2026).
+`609f823` (26 October 2026).
 
 > **Planning in progress.** The full outline for the rest of this documentation, and the
 > list of what is stale or missing today, is in
@@ -150,7 +150,10 @@ They also run the packing bench. With an 80mm receipt printer set up, every newl
 from any channel prints an order ticket with its number as a barcode. **Pack & ship** then
 takes a scan of that ticket, a scan of every jar going into the box, and once the order is
 complete buys the cheapest postage, marks it shipped and prints the label and packing slip.
-Labels print on 4×6 label stock or, by default on a new install, on a letter sheet.
+Labels print on 4×6 label stock or, by default on a new install, on a letter sheet. To
+ship in bulk instead, the Orders list (in the browser too) exports any selection, or every
+order ready to ship, as one Pirate Ship import file. Since release 2.2 every desktop table
+sorts by any column with a click on its header.
 
 - **Windows:** Electron 44 + TypeScript, packaged by electron-builder as an NSIS
   installer (`JoseMadridSalsaAdmin-Setup-<version>.exe`). Run with
@@ -213,7 +216,7 @@ There are two copies of the developer documentation today, and they have drifted
 
 | | This repo (`salsadocs`) | Monorepo `apps/docs` |
 |---|---|---|
-| Pages | 122 (plus the owner runbook), 8 of them written only here | 176 |
+| Pages | 122 (plus the owner runbook), 8 of them written only here | 177 |
 | Last synced | June 2026 | Current |
 | Covers BigCommerce, fundraising site, mobile app, kiosks, desktop apps | No | Yes |
 
