@@ -6,7 +6,7 @@ itself lives in a separate monorepo, [`jordolang/josemadridsalsa`](https://githu
 
 Start here if you want to know what the platform is made of, how the pieces talk to each
 other, and where to go next. Everything below was checked against the monorepo at commit
-`609f823` (26 October 2026).
+`bf6e003` (2 November 2026).
 
 > **Planning in progress.** The full outline for the rest of this documentation, and the
 > list of what is stale or missing today, is in
@@ -154,6 +154,14 @@ Labels print on 4×6 label stock or, by default on a new install, on a letter sh
 ship in bulk instead, the Orders list (in the browser too) exports any selection, or every
 order ready to ship, as one Pirate Ship import file. Since release 2.2 every desktop table
 sorts by any column with a click on its header.
+
+Release 2.3 adds **show checkout** for loading the van before an event: scan the label on
+each case (hold Cmd, or Ctrl on Windows, while scanning for half a case), scan or type each
+case's date code, and check out onto the show's packing manifest. Release 2.3a adds a
+**Fundraiser verifications** queue under Fundraisers that lists new fundraiser sign-ups to
+approve or decline in place, with a desktop notification and badge for each new one. Spam
+sign-ups that were never approved and have no orders can be removed with **Deny as spam**
+(also on the web Fundraiser Accounts page, owner accounts only).
 
 - **Windows:** Electron 44 + TypeScript, packaged by electron-builder as an NSIS
   installer (`JoseMadridSalsaAdmin-Setup-<version>.exe`). Run with
