@@ -6,7 +6,7 @@ itself lives in a separate monorepo, [`jordolang/josemadridsalsa`](https://githu
 
 Start here if you want to know what the platform is made of, how the pieces talk to each
 other, and where to go next. Everything below was checked against the monorepo at commit
-`bf6e003` (2 November 2026).
+`0091493` (9 November 2026).
 
 > **Planning in progress.** The full outline for the rest of this documentation, and the
 > list of what is stale or missing today, is in
@@ -24,7 +24,7 @@ the cutover from the old josemadridsalsa.com store.
 
 | What | Who uses it | Where it lives | Code |
 |---|---|---|---|
-| **Storefront** | Shoppers, wholesale buyers | [www.josemadridsalsa.com](https://www.josemadridsalsa.com) | `apps/storefront` |
+| **Storefront** | Shoppers, wholesale buyers | [www.josemadridsalsa.com](https://www.josemadridsalsa.com), plus the wholesale order form at [wholesale.josemadridsalsa.com](https://wholesale.josemadridsalsa.com) | `apps/storefront` |
 | **Admin panel** | Jose Madrid staff | www.josemadridsalsa.com/admin | `apps/storefront/app/admin` |
 | **Fundraising site** | Groups raising money and their supporters | [fundraising.josemadridsalsa.com](https://fundraising.josemadridsalsa.com) | `apps/fundraising` |
 | **Fundraiser mobile app** | Students and sellers taking orders | App Store and Google Play | `apps/fundraiser-app` |
@@ -100,7 +100,9 @@ staff admin panel (`/admin`), the desktop shell (`/admin-desktop`), point of sal
 webhook (`stripe`, `paypal`, `square`, `easypost`, `resend`, BigCommerce) and fourteen
 Vercel cron jobs. Customers get a Help Center at `/help` (articles in
 `apps/storefront/content/help`, searched locally) and order tracking at `/order-tracking` (order
-number and phone, or `/track/<tracking number>`, with a map of the last carrier scan). It is
+number and phone, or `/track/<tracking number>`, with a map of the last carrier scan). Wholesale
+buyers order by the case (in quarter-case steps) at `wholesale.josemadridsalsa.com`, which serves
+the `/wholesale-order` page and leads them into a wholesale account application. It is
 also the API for the 3D Battle Arena game (`/api/arena/*`: sign-in,
 player profiles, leaderboards, friends and game codes).
 
@@ -161,7 +163,11 @@ case's date code, and check out onto the show's packing manifest. Release 2.3a a
 **Fundraiser verifications** queue under Fundraisers that lists new fundraiser sign-ups to
 approve or decline in place, with a desktop notification and badge for each new one. Spam
 sign-ups that were never approved and have no orders can be removed with **Deny as spam**
-(also on the web Fundraiser Accounts page, owner accounts only).
+(also on the web Fundraiser Accounts page, owner accounts only). Releases 2.3b and 2.3c fix
+printing, downloads and uploads in the macOS app, and a **Live Chat** section answers website chat
+visitors from the desktop. For shipments that aren't store orders, the web admin's **Bulk
+Shipments** page (`/admin/shipping/bulk`) turns one address and a case count into a Pirate Ship
+import file with one label per box.
 
 - **Windows:** Electron 44 + TypeScript, packaged by electron-builder as an NSIS
   installer (`JoseMadridSalsaAdmin-Setup-<version>.exe`). Run with
@@ -224,7 +230,7 @@ There are two copies of the developer documentation today, and they have drifted
 
 | | This repo (`salsadocs`) | Monorepo `apps/docs` |
 |---|---|---|
-| Pages | 122 (plus the owner runbook), 8 of them written only here | 177 |
+| Pages | 122 (plus the owner runbook), 8 of them written only here | 179 |
 | Last synced | June 2026 | Current |
 | Covers BigCommerce, fundraising site, mobile app, kiosks, desktop apps | No | Yes |
 
