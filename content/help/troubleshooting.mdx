@@ -26,14 +26,17 @@ If a payment failed and you retried, the first attempt may show as a **pending**
   <Accordion title='"Email already associated with another account"'>
     You've used this email with a different sign-in method before. Sign in the way you did the first time (for example, with Google instead of a password).
   </Accordion>
-  <Accordion title="I'm locked out after too many attempts">
-    For security, sign-in pauses after 5 wrong attempts. Wait **15 minutes**, then try again, or reset your password.
+  <Accordion title='"Too many sign-in attempts"'>
+    For security, sign-in pauses after 5 wrong attempts on one email, or 20 attempts from one network across any emails. Wait **15 minutes**, then try again, or [reset your password](/help/account#forgot-your-password).
   </Accordion>
   <Accordion title="I keep getting sent back to the sign-in page">
     Your browser may be blocking cookies. Make sure cookies are allowed for josemadridsalsa.com, close any private/incognito window, and try again. Clearing cookies for the site often fixes it too.
   </Accordion>
-  <Accordion title='"Account created, but automatic sign in failed"'>
-    Your account was created! Just go to [Sign in](https://www.josemadridsalsa.com/auth/signin) and sign in normally.
+  <Accordion title={`"We couldn't sign you in automatically"`}>
+    This shows after signing up when we can't sign you straight in. Usually it means **you already have an account with that email**: we email you a "You already have a Jose Madrid Salsa account" note with a sign-in link (at most once a day). [Sign in](https://www.josemadridsalsa.com/auth/signin) with your existing account or [reset your password](/help/account#forgot-your-password). Otherwise, your new account was created and you can sign in normally.
+  </Accordion>
+  <Accordion title='"Too many sign-up attempts"'>
+    Sign-up allows 5 attempts per hour from one network. Wait an hour and try again.
   </Accordion>
 </Accordions>
 
