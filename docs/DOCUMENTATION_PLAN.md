@@ -5,7 +5,7 @@ Jose Madrid Salsa platform. It records what the platform is made of today, what 
 already cover, what is stale or missing, and the outline every new page will fit into.
 
 Surveyed against `jordolang/josemadridsalsa` at commit `12ec8fa` (6 October 2026); inventory,
-domains and known inaccuracies refreshed against `0091493` (9 November 2026).
+domains and known inaccuracies refreshed against `19d5278` (16 November 2026).
 
 ---
 
@@ -97,9 +97,9 @@ What exists in the monorepo today, and how each piece is built, run and deployed
 
 | | This repo | Monorepo `apps/docs` |
 |---|---|---|
-| MDX pages | 122, plus 7 owner-runbook pages and 9 Help Center pages written here | 179 |
+| MDX pages | 122, plus 7 owner-runbook pages and 9 Help Center pages written here | 180 |
 | Pages only here | 10: `integrations/shopify*.mdx` (Shopify is no longer used), `apps/fundraiser-app/*` (7 pages, salsadocs #18) and `integrations/google-analytics-admin-reporting.mdx` (#17) | 65 |
-| Shared pages whose text differs | 61 | |
+| Shared pages whose text differs | 63 | |
 | Last change | October 2026 | Ongoing, ships with code |
 
 **Customer Help Center.** `content/help` (9 articles, salsadocs #19) is written here, and
@@ -120,7 +120,7 @@ permissions, and the testing and versioning guides.
 **Known inaccuracies to fix wherever they live:**
 
 - `deployment/vercel.mdx` says no `vercel.json` is used; the storefront has one with a
-  custom build command and 14 crons (`merch-orders` was added for Printify).
+  custom build command and 15 crons (`merch-orders` was added for Printify, `hubspot-sync` for HubSpot).
 - The monorepo `README.md` and `CLAUDE.md` describe four apps; there are eleven
   directories under `apps/`, and `CLAUDE.md` refers to `apps/ios/**`, which does not exist
   (the iPad app is `apps/ios-kiosk`).
@@ -173,7 +173,7 @@ social platforms, UploadThing, Sentry and Amplitude. Remove the Shopify pages.
 - Deploying: Vercel projects, domains, `main`-only deploys, `turbo-ignore`, rollback
 - Releasing the desktop apps (Desktop Apps workflow, signing secrets, update feed) (**new**)
 - Releasing the mobile app (EAS, store review, OTA updates) (**new**)
-- Scheduled jobs: all 14 crons, what each does and what to do when one fails
+- Scheduled jobs: all 15 crons, what each does and what to do when one fails
 - Webhooks: every inbound webhook, its secret and how to replay it (**new**)
 - Database: migrations, backups, Supabase, the green-build-failed-migration trap
 - Environment variables, per Vercel project (**new** per-project split)
@@ -190,7 +190,7 @@ Quick start, adding a feature, testing, code quality, debugging, versioning, API
    Actions workflow in the monorepo runs on every push to `main` that touches
    `apps/docs/content/**`, copies `content/docs` into this repo with a token scoped to
    it, and commits only when something changed. The first run closes the current gap
-   (67 missing pages, 61 stale ones as of 9 November) and removes the Shopify pages. The admin panel's
+   (68 missing pages, 63 stale ones as of 16 November) and removes the Shopify pages. The admin panel's
    existing per-page publisher (`/admin/developer/salsadocs`, which writes straight to this
    repo through `SALSADOCS_GITHUB_TOKEN`) would be overwritten by the next sync, so it
    should write to `apps/docs` instead, or be retired.

@@ -6,7 +6,7 @@ itself lives in a separate monorepo, [`jordolang/josemadridsalsa`](https://githu
 
 Start here if you want to know what the platform is made of, how the pieces talk to each
 other, and where to go next. Everything below was checked against the monorepo at commit
-`0091493` (9 November 2026).
+`19d5278` (16 November 2026).
 
 > **Planning in progress.** The full outline for the rest of this documentation, and the
 > list of what is stale or missing today, is in
@@ -97,7 +97,7 @@ The primary Next.js 16 app and the home of almost all product code: the public s
 customer accounts, cart and checkout, recipes and the Heat Index blog, wholesale, the
 staff admin panel (`/admin`), the desktop shell (`/admin-desktop`), point of sale
 (`/pos`), kiosk screens (`/kiosk`), about fifty API groups under `app/api`, every
-webhook (`stripe`, `paypal`, `square`, `easypost`, `resend`, BigCommerce) and fourteen
+webhook (`stripe`, `paypal`, `square`, `easypost`, `resend`, BigCommerce) and fifteen
 Vercel cron jobs. Customers get a Help Center at `/help` (articles in
 `apps/storefront/content/help`, searched locally) and order tracking at `/order-tracking` (order
 number and phone, or `/track/<tracking number>`, with a map of the last carrier scan). Wholesale
@@ -119,7 +119,10 @@ sign-up), every public fundraiser page (`/fundraisers`, `/f`, `/arena`), the fun
 portal and their APIs. It also serves the 3D Battle Arena game at `/battle-arena`
 (one static page copied in from the separate `battle-arena-3d` repository; each month's
 `/arena` page opens it), whose players sign in against the storefront's `/api/arena`. Its `/shop` reads the BigCommerce fundraising store live and hands
-carts to that store's checkout; the group list is BigCommerce's checkout dropdown. The
+carts to that store's checkout. Opening a group's page (or a seller's page) credits the cart to
+that group and seller, and checkout records that against the BigCommerce cart so the copied order is
+credited from it; BigCommerce's checkout answer is only a fallback. Each group page also offers
+branded sale kits. The
 storefront redirects (308) old fundraiser paths here, and this app sends main-site paths
 back.
 
@@ -154,7 +157,8 @@ takes a scan of that ticket, a scan of every jar going into the box, and once th
 complete buys the cheapest postage, marks it shipped and prints the label and packing slip.
 Labels print on 4×6 label stock or, by default on a new install, on a letter sheet. To
 ship in bulk instead, the Orders list (in the browser too) exports any selection, or every
-order ready to ship, as one Pirate Ship import file. Since release 2.2 every desktop table
+order ready to ship, as one Pirate Ship import file, and its **Packing Slips** button prints
+every selected order's slip in one print job. Since release 2.2 every desktop table
 sorts by any column with a click on its header.
 
 Release 2.3 adds **show checkout** for loading the van before an event: scan the label on
@@ -230,7 +234,7 @@ There are two copies of the developer documentation today, and they have drifted
 
 | | This repo (`salsadocs`) | Monorepo `apps/docs` |
 |---|---|---|
-| Pages | 122 (plus the owner runbook), 8 of them written only here | 179 |
+| Pages | 122 (plus the owner runbook), 8 of them written only here | 180 |
 | Last synced | June 2026 | Current |
 | Covers BigCommerce, fundraising site, mobile app, kiosks, desktop apps | No | Yes |
 

@@ -82,8 +82,8 @@ an order screen.
 | Welcome | `welcome.tsx` | none; links to Join or Get back in |
 | Join your group | `join.tsx` | `POST /group`, then `POST /register` |
 | Get back in | `reclaim.tsx` | `POST /roster`, then `POST /reclaim` |
-| Lock | `lock.tsx` | `POST /unlock` (through the session) |
-| Home | `index.tsx` | `GET /me`; opens Square's reader settings when cards are on |
+| Lock | `lock.tsx` | `POST /unlock` (through the session); **Delete my account** sends the typed PIN to `POST /account/delete` |
+| Home | `index.tsx` | `GET /me`; opens Square's reader settings when cards are on; **Delete my account** calls `POST /account/delete` |
 | Sell (register) | `sell.tsx` | `GET /catalog`, `POST /orders`, card calls |
 | Phone order | `new-order.tsx` | `GET /catalog`, `POST /orders`, card calls |
 | My orders | `orders.tsx` | `GET /orders`; finishes or cancels an unfinished card sale |
