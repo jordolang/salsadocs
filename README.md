@@ -6,7 +6,7 @@ itself lives in a separate monorepo, [`jordolang/josemadridsalsa`](https://githu
 
 Start here if you want to know what the platform is made of, how the pieces talk to each
 other, and where to go next. Everything below was checked against the monorepo at commit
-`86f75fd` (11 October 2026).
+`e19519a` (23 November 2026).
 
 > **Planning in progress.** The full outline for the rest of this documentation, and the
 > list of what is stale or missing today, is in
@@ -24,7 +24,7 @@ the cutover from the old josemadridsalsa.com store.
 
 | What | Who uses it | Where it lives | Code |
 |---|---|---|---|
-| **Storefront** | Shoppers, wholesale buyers | [www.josemadridsalsa.com](https://www.josemadridsalsa.com) | `apps/storefront` |
+| **Storefront** | Shoppers, wholesale buyers | [www.josemadridsalsa.com](https://www.josemadridsalsa.com), plus the wholesale order form at [wholesale.josemadridsalsa.com](https://wholesale.josemadridsalsa.com) | `apps/storefront` |
 | **Admin panel** | Jose Madrid staff | www.josemadridsalsa.com/admin | `apps/storefront/app/admin` |
 | **Fundraising site** | Groups raising money and their supporters | [fundraising.josemadridsalsa.com](https://fundraising.josemadridsalsa.com) | `apps/fundraising` |
 | **Fundraiser mobile app** | Students and sellers taking orders | App Store and Google Play | `apps/fundraiser-app` |
@@ -97,8 +97,13 @@ The primary Next.js 16 app and the home of almost all product code: the public s
 customer accounts, cart and checkout, recipes and the Heat Index blog, wholesale, the
 staff admin panel (`/admin`), the desktop shell (`/admin-desktop`), point of sale
 (`/pos`), kiosk screens (`/kiosk`), about fifty API groups under `app/api`, every
-webhook (`stripe`, `paypal`, `square`, `easypost`, `resend`, BigCommerce) and fourteen
-Vercel cron jobs. It is also the API for the 3D Battle Arena game (`/api/arena/*`: sign-in,
+webhook (`stripe`, `paypal`, `square`, `easypost`, `resend`, BigCommerce) and fifteen
+Vercel cron jobs. Customers get a Help Center at `/help` (articles in
+`apps/storefront/content/help`, searched locally) and order tracking at `/order-tracking` (order
+number and phone, or `/track/<tracking number>`, with a map of the last carrier scan). Wholesale
+buyers order by the case (in quarter-case steps) at `wholesale.josemadridsalsa.com`, which serves
+the `/wholesale-order` page and leads them into a wholesale account application. It is
+also the API for the 3D Battle Arena game (`/api/arena/*`: sign-in,
 player profiles, leaderboards, friends and game codes).
 
 - **Run:** `npm run dev` from the monorepo root → http://localhost:3000
@@ -112,9 +117,13 @@ Its own Next.js app and its own Vercel project, replacing the old
 josemadridsalsafundraising.com. It serves the fundraising site (home, shop, groups, cart,
 sign-up), every public fundraiser page (`/fundraisers`, `/f`, `/arena`), the fundraiser
 portal and their APIs. It also serves the 3D Battle Arena game at `/battle-arena`
-(one static page copied in from the separate `battle-arena-3d` repository; each month's
+(one static page copied in from the separate `battle-arena-3d` repository, also linked as a
+git submodule at `apps/battle-arena-3d`; each month's
 `/arena` page opens it), whose players sign in against the storefront's `/api/arena`. Its `/shop` reads the BigCommerce fundraising store live and hands
-carts to that store's checkout; the group list is BigCommerce's checkout dropdown. The
+carts to that store's checkout. Opening a group's page (or a seller's page) credits the cart to
+that group and seller, and checkout records that against the BigCommerce cart so the copied order is
+credited from it; BigCommerce's checkout answer is only a fallback. Each group page also offers
+branded sale kits. The
 storefront redirects (308) old fundraiser paths here, and this app sends main-site paths
 back.
 
@@ -124,8 +133,11 @@ back.
 
 ### Fundraiser mobile app — `apps/fundraiser-app`
 
-One Expo / React Native app (`net.josemadrid.fundraiser`) that every group uses. A seller
-enters their group ID and group PIN, picks a personal PIN, and takes orders: a
+One Expo / React Native app (`net.josemadrid.fundraiser`) that every group uses. Approving a
+fundraiser turns the app on for the group and emails the organizer a one-time setup link; the
+organizer invites sellers with a QR code or link. A seller scans that code (or enters the group
+ID and group PIN), picks a personal PIN, and takes orders from four tabs (Home, Orders, Team,
+More): a
 Square-style register for face-to-face sales, or a phone-order form for delivery later.
 Cards go through Square's Mobile Payments SDK, wired in by a custom config plugin
 (`plugins/with-square-mobile-payments.js`). All prices and orders come from the
@@ -134,7 +146,8 @@ storefront's `/api/fundraiser-app`. It is **not** an npm workspace; it has its o
 - **Run:** `cd apps/fundraiser-app && npm install && npx expo start`. Square's native code
   needs a development build (`npx expo run:ios` / `run:android`), not Expo Go.
 - **Ship:** EAS Build and Submit (`npm run build:ios`, `npm run submit:ios`, and the
-  Android equivalents).
+  Android equivalents). `submit:ios` sends the build straight to the App Store Connect app,
+  ready for TestFlight.
 
 ### Desktop admin apps — `apps/windows-admin`, `apps/macos-admin`
 
@@ -147,7 +160,23 @@ They also run the packing bench. With an 80mm receipt printer set up, every newl
 from any channel prints an order ticket with its number as a barcode. **Pack & ship** then
 takes a scan of that ticket, a scan of every jar going into the box, and once the order is
 complete buys the cheapest postage, marks it shipped and prints the label and packing slip.
-Labels print on 4×6 label stock or, by default on a new install, on a letter sheet.
+Labels print on 4×6 label stock or, by default on a new install, on a letter sheet. To
+ship in bulk instead, the Orders list (in the browser too) exports any selection, or every
+order ready to ship, as one Pirate Ship import file, and its **Packing Slips** button prints
+every selected order's slip in one print job. Since release 2.2 every desktop table
+sorts by any column with a click on its header.
+
+Release 2.3 adds **show checkout** for loading the van before an event: scan the label on
+each case (hold Cmd, or Ctrl on Windows, while scanning for half a case), scan or type each
+case's date code, and check out onto the show's packing manifest. Release 2.3a adds a
+**Fundraiser verifications** queue under Fundraisers that lists new fundraiser sign-ups to
+approve or decline in place, with a desktop notification and badge for each new one. Spam
+sign-ups that were never approved and have no orders can be removed with **Deny as spam**
+(also on the web Fundraiser Accounts page, owner accounts only). Releases 2.3b and 2.3c fix
+printing, downloads and uploads in the macOS app, and a **Live Chat** section answers website chat
+visitors from the desktop. For shipments that aren't store orders, the web admin's **Bulk
+Shipments** page (`/admin/shipping/bulk`) turns one address and a case count into a Pirate Ship
+import file with one label per box.
 
 - **Windows:** Electron 44 + TypeScript, packaged by electron-builder as an NSIS
   installer (`JoseMadridSalsaAdmin-Setup-<version>.exe`). Run with
@@ -173,6 +202,12 @@ XcodeGen.
   local tooling and is left out of `npm run build`.
 - **`apps/docs`** is the Fumadocs developer documentation site that ships with the code.
   See [Where the docs live](#where-the-docs-live).
+- **`apps/office-display`** is a git submodule pointing at the separate `jms-office-display`
+  repository: the TRMNL e-ink office display server, with its own Vercel project. Clone with
+  `--recurse-submodules` to get it and `apps/battle-arena-3d`.
+- **`apps/receipt-printer`** is a PowerShell script for the office PC. It polls the storefront's
+  `/api/receipt-printer/feed` and prints a receipt on a USB thermal printer for every paid online
+  and fundraising order, contact form message and fundraiser sign-up.
 
 ## Working in the monorepo
 
@@ -198,11 +233,19 @@ between the storefront and fundraising projects automatically.
 
 ## Where the docs live
 
+This repo holds three kinds of pages:
+
+| Folder | Audience | Where it's published |
+|---|---|---|
+| `content/help` | Customers | Copied into the storefront at `apps/storefront/content/help` (josemadridsalsa #663) and served at www.josemadridsalsa.com/help. Change both copies together |
+| `content/docs/owner-runbook` | The owner | Only here |
+| The rest of `content/docs` | Developers and staff | Meant to mirror monorepo `apps/docs` (below) |
+
 There are two copies of the developer documentation today, and they have drifted:
 
 | | This repo (`salsadocs`) | Monorepo `apps/docs` |
 |---|---|---|
-| Pages | 114 (plus the owner runbook) | 170 |
+| Pages | 122 (plus the owner runbook), 8 of them written only here | 181 |
 | Last synced | June 2026 | Current |
 | Covers BigCommerce, fundraising site, mobile app, kiosks, desktop apps | No | Yes |
 
