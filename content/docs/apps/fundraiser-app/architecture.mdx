@@ -30,12 +30,18 @@ live on the server, so the app mostly collects input, calls the API and shows th
         <File name="welcome.tsx" />
         <File name="join.tsx" />
         <File name="reclaim.tsx" />
+        <File name="scan-invite.tsx" />
         <File name="lock.tsx" />
-        <File name="index.tsx" />
+        <Folder name="(tabs)">
+          <File name="_layout.tsx" />
+          <File name="index.tsx" />
+          <File name="orders.tsx" />
+          <File name="team.tsx" />
+          <File name="more.tsx" />
+        </Folder>
         <File name="sell.tsx" />
         <File name="new-order.tsx" />
-        <File name="orders.tsx" />
-        <File name="organizer.tsx" />
+        <File name="text-friends.tsx" />
       </Folder>
       <Folder name="components">
         <File name="ui.tsx" />
@@ -80,14 +86,19 @@ an order screen.
 | Screen | File | Calls |
 |---|---|---|
 | Welcome | `welcome.tsx` | none; links to Join or Get back in |
-| Join your group | `join.tsx` | `POST /group`, then `POST /register` |
+| Join your group | `join.tsx` | `POST /group`, then `POST /register` (asks for parent approval); can open the QR scanner |
+| Scan invite | `scan-invite.tsx` | reads the organizer's invite QR code, then `POST /group` |
 | Get back in | `reclaim.tsx` | `POST /roster`, then `POST /reclaim` |
 | Lock | `lock.tsx` | `POST /unlock` (through the session); **Delete my account** sends the typed PIN to `POST /account/delete` |
-| Home | `index.tsx` | `GET /me`; opens Square's reader settings when cards are on; **Delete my account** calls `POST /account/delete` |
+| Home tab | `(tabs)/index.tsx` | `GET /me`; sales, average order and shortcuts to Sell, Phone order, My orders and Team |
+| Orders tab | `(tabs)/orders.tsx` | `GET /orders`; finishes or cancels an unfinished card sale |
+| Team tab | `(tabs)/team.tsx` | `GET /organizer/overview`, `GET /organizer/sellers`, `POST /organizer/invite`, PIN reset, group PIN change |
+| More tab | `(tabs)/more.tsx` | Card reader & Tap to Pay settings, sign out, **Delete my account** (`POST /account/delete`) |
 | Sell (register) | `sell.tsx` | `GET /catalog`, `POST /orders`, card calls |
 | Phone order | `new-order.tsx` | `GET /catalog`, `POST /orders`, card calls |
-| My orders | `orders.tsx` | `GET /orders`; finishes or cancels an unfinished card sale |
-| Organizer | `organizer.tsx` | `GET /organizer/sellers`, PIN reset, group PIN change |
+| Text friends | `text-friends.tsx` | shares the seller's link, then `POST /me/shared` |
+
+The four tabs live under `src/app/(tabs)/` with a bottom tab bar (`(tabs)/_layout.tsx`), styled dark with a gold accent since #805.
 
 ## Session states
 

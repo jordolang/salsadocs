@@ -6,7 +6,7 @@ itself lives in a separate monorepo, [`jordolang/josemadridsalsa`](https://githu
 
 Start here if you want to know what the platform is made of, how the pieces talk to each
 other, and where to go next. Everything below was checked against the monorepo at commit
-`19d5278` (16 November 2026).
+`e19519a` (23 November 2026).
 
 > **Planning in progress.** The full outline for the rest of this documentation, and the
 > list of what is stale or missing today, is in
@@ -117,7 +117,8 @@ Its own Next.js app and its own Vercel project, replacing the old
 josemadridsalsafundraising.com. It serves the fundraising site (home, shop, groups, cart,
 sign-up), every public fundraiser page (`/fundraisers`, `/f`, `/arena`), the fundraiser
 portal and their APIs. It also serves the 3D Battle Arena game at `/battle-arena`
-(one static page copied in from the separate `battle-arena-3d` repository; each month's
+(one static page copied in from the separate `battle-arena-3d` repository, also linked as a
+git submodule at `apps/battle-arena-3d`; each month's
 `/arena` page opens it), whose players sign in against the storefront's `/api/arena`. Its `/shop` reads the BigCommerce fundraising store live and hands
 carts to that store's checkout. Opening a group's page (or a seller's page) credits the cart to
 that group and seller, and checkout records that against the BigCommerce cart so the copied order is
@@ -132,8 +133,11 @@ back.
 
 ### Fundraiser mobile app — `apps/fundraiser-app`
 
-One Expo / React Native app (`net.josemadrid.fundraiser`) that every group uses. A seller
-enters their group ID and group PIN, picks a personal PIN, and takes orders: a
+One Expo / React Native app (`net.josemadrid.fundraiser`) that every group uses. Approving a
+fundraiser turns the app on for the group and emails the organizer a one-time setup link; the
+organizer invites sellers with a QR code or link. A seller scans that code (or enters the group
+ID and group PIN), picks a personal PIN, and takes orders from four tabs (Home, Orders, Team,
+More): a
 Square-style register for face-to-face sales, or a phone-order form for delivery later.
 Cards go through Square's Mobile Payments SDK, wired in by a custom config plugin
 (`plugins/with-square-mobile-payments.js`). All prices and orders come from the
@@ -142,7 +146,8 @@ storefront's `/api/fundraiser-app`. It is **not** an npm workspace; it has its o
 - **Run:** `cd apps/fundraiser-app && npm install && npx expo start`. Square's native code
   needs a development build (`npx expo run:ios` / `run:android`), not Expo Go.
 - **Ship:** EAS Build and Submit (`npm run build:ios`, `npm run submit:ios`, and the
-  Android equivalents).
+  Android equivalents). `submit:ios` sends the build straight to the App Store Connect app,
+  ready for TestFlight.
 
 ### Desktop admin apps — `apps/windows-admin`, `apps/macos-admin`
 
@@ -197,6 +202,12 @@ XcodeGen.
   local tooling and is left out of `npm run build`.
 - **`apps/docs`** is the Fumadocs developer documentation site that ships with the code.
   See [Where the docs live](#where-the-docs-live).
+- **`apps/office-display`** is a git submodule pointing at the separate `jms-office-display`
+  repository: the TRMNL e-ink office display server, with its own Vercel project. Clone with
+  `--recurse-submodules` to get it and `apps/battle-arena-3d`.
+- **`apps/receipt-printer`** is a PowerShell script for the office PC. It polls the storefront's
+  `/api/receipt-printer/feed` and prints a receipt on a USB thermal printer for every paid online
+  and fundraising order, contact form message and fundraiser sign-up.
 
 ## Working in the monorepo
 
@@ -234,7 +245,7 @@ There are two copies of the developer documentation today, and they have drifted
 
 | | This repo (`salsadocs`) | Monorepo `apps/docs` |
 |---|---|---|
-| Pages | 122 (plus the owner runbook), 8 of them written only here | 180 |
+| Pages | 122 (plus the owner runbook), 8 of them written only here | 181 |
 | Last synced | June 2026 | Current |
 | Covers BigCommerce, fundraising site, mobile app, kiosks, desktop apps | No | Yes |
 
